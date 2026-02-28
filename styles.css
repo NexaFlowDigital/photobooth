@@ -7,10 +7,10 @@
   --text:#f6f7ff;
   --muted:rgba(246,247,255,.70);
 
-  /* photobooth vibe */
-  --accent1:#ff2d7d; /* neon pink */
-  --accent2:#6a5cff; /* neon violet */
-  --accent3:#12d6ff; /* cyan */
+  --accent1:#ff2d7d;
+  --accent2:#6a5cff;
+  --accent3:#12d6ff;
+
   --good:#22c55e;
   --warn:#f59e0b;
   --bad:#ef4444;
@@ -69,12 +69,7 @@ body{
 }
 .railCardTitle{ font-weight:900; font-size:12px; letter-spacing:.5px; text-transform:uppercase; color:rgba(246,247,255,.85); margin-bottom:8px; }
 .railCardText{ font-size:12px; color:var(--muted); line-height:1.4; margin:6px 0; }
-
-.railFooter{
-  margin-top:18px;
-  font-size:12px;
-  color:rgba(246,247,255,.55);
-}
+.railFooter{ margin-top:18px; font-size:12px; color:rgba(246,247,255,.55); }
 
 .main{
   height:100%;
@@ -311,6 +306,11 @@ video{
   color: var(--text);
   min-width:140px;
 }
+.btn.small{
+  min-width:0;
+  padding:12px 14px;
+  font-size:14px;
+}
 
 /* modal */
 .modal{
@@ -331,7 +331,7 @@ video{
   border:1px solid rgba(255,255,255,.12);
   border-radius:22px;
   display:grid;
-  grid-template-columns: 1fr 380px;
+  grid-template-columns: 1fr 400px;
 }
 .preview{
   background: rgba(10,10,14,.85);
@@ -340,7 +340,7 @@ video{
   display:flex;
   align-items:center;
   justify-content:center;
-  overflow:hidden; /* IMPORTANT: no inner scroll on desktop */
+  overflow:hidden;
 }
 .preview img,
 .preview video{
@@ -348,7 +348,7 @@ video{
   width:auto;
   max-width:100%;
   height:auto;
-  max-height: calc(92vh - 32px); /* fit without scroll */
+  max-height: calc(92vh - 32px);
   border-radius:16px;
   border:1px solid rgba(255,255,255,.12);
   background:#000;
@@ -359,7 +359,9 @@ video{
 .panel{ padding:16px; overflow:auto; }
 .panelTitle{ font-size:18px; font-weight:900; margin-bottom:6px; }
 .panelSub{ font-size:12px; color:var(--muted); margin-bottom:12px; }
+
 .divider{ height:1px; background: rgba(255,255,255,.10); margin:14px 0; }
+
 .label{
   display:block;
   font-size:12px;
@@ -369,6 +371,7 @@ video{
   color:var(--muted);
   margin-bottom:6px;
 }
+
 .input{
   width:100%;
   padding:12px;
@@ -381,6 +384,22 @@ video{
 }
 .tinyNote{ margin-top:10px; font-size:12px; color:var(--muted); line-height:1.35; }
 
+.shareRow{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.shareRow .btn{
+  flex:1 1 140px;
+  min-width:0;
+}
+.shareHint{
+  margin-top:8px;
+  font-size:12px;
+  color:rgba(246,247,255,.65);
+  line-height:1.35;
+}
+
 /* mobile bar */
 .mobileBar{ display:none; }
 
@@ -389,23 +408,56 @@ video{
   .app{ grid-template-columns:1fr; }
   .rail{ display:none; }
 
+  /* KEY FIX: allow the TEMPLATE screen to fit without cutting buttons */
   .stage{
     padding:12px;
-    padding-bottom: 120px; /* space for mobile bar */
+    min-height:0;
+    padding-bottom: calc(110px + env(safe-area-inset-bottom));
+  }
+
+  .screen{
+    align-items:stretch;
+    justify-content:stretch;
   }
 
   .screenCard{
-    width: calc(100vw - 24px);
-    padding:14px;
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+    display:flex;
+    flex-direction:column;
     border-radius:18px;
+    padding:14px;
+    overflow:hidden; /* prevent outer scroll */
+  }
+
+  .screenHeader{ flex:0 0 auto; }
+
+  /* Make the content area scroll ONLY if needed */
+  .frameGrid,
+  .steps,
+  .modeGrid{
+    flex: 1 1 auto;
+    min-height:0;
+    overflow:auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 10px;
   }
 
   .modeGrid{ grid-template-columns: 1fr; }
   .frameGrid{ grid-template-columns: repeat(2, 1fr); }
 
+  /* Buttons always visible at bottom */
+  .screenActions{
+    flex:0 0 auto;
+    margin-top:12px;
+    padding-top:10px;
+    border-top:1px solid rgba(255,255,255,.08);
+  }
+
   .booth{
-    width: calc(100vw - 24px);
-    height: calc(100vh - 64px - 120px - 24px);
+    width: 100%;
+    height: calc(100vh - 64px - (110px + env(safe-area-inset-bottom)) - 24px);
     border-radius:18px;
   }
 
@@ -455,7 +507,7 @@ video{
     padding:12px 14px;
   }
 
-  /* modal on mobile: stack and fit */
+  /* modal on mobile */
   .modal{
     align-items:flex-start;
     overflow:auto;
@@ -474,7 +526,7 @@ video{
   }
   .preview img,
   .preview video{
-    max-height: 30vh; /* shrink so buttons fit w/o scroll most of the time */
+    max-height: 30vh;
     max-width: 92vw;
   }
   .panel{ overflow:visible; }
