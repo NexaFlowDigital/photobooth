@@ -8,192 +8,174 @@
 </head>
 <body>
   <div class="app">
-    <!-- DESKTOP SIDEBAR -->
-    <aside class="sidebar">
-      <div class="brand">
-        <div class="brandMark">K</div>
-        <div>
-          <div class="brandTitle">The Gathering on Summit</div>
-          <div class="brandSub">LHS Killough • Photobooth</div>
+    <!-- Desktop-only left rail (branding + quick help) -->
+    <aside class="rail">
+      <div class="railBrand">
+        <div class="railLogo">GOS</div>
+        <div class="railText">
+          <div class="railTitle">The Gathering on Summit</div>
+          <div class="railSub">LHS Killough • Photobooth</div>
         </div>
       </div>
 
-      <div class="sectionTitle">Choose a Frame</div>
-      <div id="frames" class="frameGrid"></div>
-
-      <div class="help">
-        <div class="helpTitle">If camera doesn’t show</div>
-        <div>• iPad: open in Safari (not inside Canvas app).</div>
-        <div>• Desktop: allow camera for this site.</div>
+      <div class="railCard">
+        <div class="railCardTitle">Quick Tips</div>
+        <div class="railCardText">• iPad: open in Safari (not inside Canvas app)</div>
+        <div class="railCardText">• Allow camera access when prompted</div>
+        <div class="railCardText">• Stand centered and look at the camera</div>
       </div>
+
+      <div class="railFooter">Powered by Killough CS Students</div>
     </aside>
 
     <main class="main">
       <header class="topbar">
-        <!-- CHANGED: top title now has an id for JS to update -->
-        <div id="appTitle" class="topTitle">The Gathering on Summit Photo Booth</div>
+        <div class="topTitle">
+          <div class="topTitleMain">THE GATHERING ON SUMMIT</div>
+          <div id="topTitleSub" class="topTitleSub">Choose a mode</div>
+        </div>
 
-        <div class="chip">
+        <div class="statusChip">
           <span id="chipDot" class="dot warn"></span>
-          <span id="chipText">Choose a mode</span>
+          <span id="chipText">Ready</span>
         </div>
       </header>
 
       <section class="stage">
+        <!-- SCREEN: MODE -->
+        <section id="screenMode" class="screen show">
+          <div class="screenCard">
+            <div class="screenHeader">
+              <div class="screenTitle">Choose capture mode</div>
+              <div class="screenSub">Pick what you want to create.</div>
+            </div>
 
-        <!-- =========================
-             SCREEN 1: HOME (Mode select)
-             ========================= -->
-        <section id="screenHome" class="screen" style="display:block;">
-          <div class="screenInner">
-            <div class="card">
-              <h1 class="hTitle">Welcome</h1>
-              <div class="hSub">
-                Choose what you want to create, then pick a frame and follow the instructions.
-              </div>
+            <div class="modeGrid">
+              <button id="modePhotoBtn" class="modeTile" type="button">
+                <div class="modeName">Photo</div>
+                <div class="modeDesc">3-shot photo strip</div>
+              </button>
 
-              <div class="modeRow">
-                <button id="modePhotoBtn" class="modeBtn" type="button">
-                  <div class="t">Photo</div>
-                  <div class="d">3-shot photo strip</div>
-                </button>
+              <button id="modeGifBtn" class="modeTile" type="button">
+                <div class="modeName">GIF</div>
+                <div class="modeDesc">Animated square</div>
+              </button>
 
-                <button id="modeGifBtn" class="modeBtn" type="button">
-                  <div class="t">GIF</div>
-                  <div class="d">Animated capture (preview as strip)</div>
-                </button>
+              <button id="modeBoomBtn" class="modeTile" type="button">
+                <div class="modeName">Boomerang</div>
+                <div class="modeDesc">Forward + reverse</div>
+              </button>
+            </div>
 
-                <button id="modeBoomBtn" class="modeBtn" type="button">
-                  <div class="t">Boomerang</div>
-                  <div class="d">Forward + reverse capture (preview as strip)</div>
-                </button>
-              </div>
-
-              <div class="help" style="margin-top:18px;">
-                <div class="helpTitle">Tips</div>
-                <div>• iPad: open in Safari (not inside Canvas app).</div>
-                <div>• Allow camera access when prompted.</div>
-              </div>
+            <div class="screenActions">
+              <button id="modeContinueBtn" class="btn primary" type="button" disabled>CONTINUE</button>
             </div>
           </div>
         </section>
 
-        <!-- =========================
-             SCREEN 2: TEMPLATES (Frame select)
-             ========================= -->
-        <section id="screenTemplates" class="screen">
-          <div class="screenInner">
-            <div class="card">
-              <h2 class="hTitle" style="font-size:24px; margin:0;">Choose a Frame</h2>
-              <div class="hSub">Tap a frame below. You can change it anytime.</div>
+        <!-- SCREEN: TEMPLATE (Frames) -->
+        <section id="screenTemplate" class="screen">
+          <div class="screenCard">
+            <div class="screenHeader">
+              <div class="screenTitle">Choose a template</div>
+              <div class="screenSub">Tap a design to use during capture.</div>
+            </div>
 
-              <!-- Desktop-style frame grid (still works on mobile too) -->
-              <div style="margin-top:14px;">
-                <div id="frames" class="frameGrid"></div>
-              </div>
+            <div id="frames" class="frameGrid"></div>
 
-              <div class="navRow">
-                <button id="backToHomeBtn" class="btn secondary" type="button">BACK</button>
-                <button id="toInstructionsBtn" class="btn primary" type="button">CONTINUE</button>
-              </div>
+            <div class="screenActions split">
+              <button id="templateBackBtn" class="btn secondary" type="button">BACK</button>
+              <button id="templateContinueBtn" class="btn primary" type="button">CONTINUE</button>
             </div>
           </div>
         </section>
 
-        <!-- =========================
-             SCREEN 3: INSTRUCTIONS
-             ========================= -->
+        <!-- SCREEN: INSTRUCTIONS -->
         <section id="screenInstructions" class="screen">
-          <div class="screenInner">
-            <div class="card">
-              <h2 class="hTitle" style="font-size:24px; margin:0;">Instructions</h2>
-              <div class="hSub" style="margin-bottom:12px;">
-                Follow these steps, then start when you’re ready.
-              </div>
+          <div class="screenCard">
+            <div class="screenHeader">
+              <div class="screenTitle">Instructions</div>
+              <div id="instructionsSub" class="screenSub">You’ll take 3 photos automatically.</div>
+            </div>
 
-              <div class="help" style="margin-top:0; border-top:none; padding-top:0;">
-                <div class="helpTitle">How it works</div>
-                <div>• Position yourself in the camera preview.</div>
-                <div>• Press START when ready.</div>
-                <div>• The app will capture automatically.</div>
-                <div>• Download or email your result.</div>
-              </div>
+            <div class="steps">
+              <div class="step"><div class="stepNum">1</div><div class="stepTxt">Allow camera access</div></div>
+              <div class="step"><div class="stepNum">2</div><div class="stepTxt">Center yourself in the frame</div></div>
+              <div class="step"><div class="stepNum">3</div><div class="stepTxt">Press START and hold still</div></div>
+            </div>
 
-              <div class="navRow">
-                <button id="backToTemplatesBtn" class="btn secondary" type="button">BACK</button>
-                <button id="beginCaptureBtn" class="btn primary" type="button">START NOW</button>
-              </div>
+            <div class="screenActions split">
+              <button id="instructionsBackBtn" class="btn secondary" type="button">BACK</button>
+              <button id="beginCaptureBtn" class="btn primary" type="button">START NOW</button>
             </div>
           </div>
         </section>
 
-        <!-- =========================
-             SCREEN 4: CAPTURE (Camera + overlay)
-             ========================= -->
+        <!-- SCREEN: CAPTURE -->
         <section id="screenCapture" class="screen">
-          <div class="booth">
-            <video id="video" playsinline autoplay muted></video>
+          <div class="boothShell">
+            <div class="booth">
+              <video id="video" playsinline autoplay muted></video>
 
-            <div class="overlay">
-              <img id="frameOverlay" alt="" />
-            </div>
+              <div class="overlay">
+                <img id="frameOverlay" alt="" />
+              </div>
 
-            <div id="prompt" class="prompt" aria-live="polite"></div>
+              <div id="prompt" class="prompt" aria-live="polite"></div>
+              <div id="flash" class="flash"></div>
+              <div id="countdown" class="countdown"></div>
 
-            <div id="flash" class="flash"></div>
-            <div id="countdown" class="countdown"></div>
+              <!-- RESULT MODAL -->
+              <div id="modal" class="modal">
+                <div class="modalCard">
+                  <div class="preview">
+                    <img id="stripPreview" alt="Result preview" />
+                    <video id="animPreview" playsinline muted loop controls></video>
+                  </div>
 
-            <!-- RESULT MODAL -->
-            <div id="modal" class="modal">
-              <div class="modalCard">
-                <div class="preview">
-                  <img id="stripPreview" alt="Photo strip preview" />
-                </div>
-                <div class="panel">
-                  <div class="panelTitle">Your Photo Strip</div>
-                  <div class="panelSub">Download it or email it to yourself.</div>
+                  <div class="panel">
+                    <div class="panelTitle" id="resultTitle">Your Result</div>
+                    <div class="panelSub" id="resultSub">Download it or email it to yourself.</div>
 
-                  <button id="downloadBtn" class="btn primary">DOWNLOAD</button>
+                    <button id="downloadBtn" class="btn primary">DOWNLOAD</button>
 
-                  <div class="divider"></div>
+                    <div class="divider"></div>
 
-                  <label class="label">Email</label>
-                  <input id="emailInput" class="input" type="email" placeholder="you@example.com" />
+                    <label class="label">Email</label>
+                    <input id="emailInput" class="input" type="email" placeholder="you@example.com" />
+                    <button id="emailBtn" class="btn primary">EMAIL TO ME</button>
 
-                  <button id="emailBtn" class="btn primary">EMAIL TO ME</button>
-                  <div class="tinyNote">Instagram: download the image and share from Photos.</div>
+                    <div class="tinyNote" id="emailNote">
+                      Tip: for social apps, download first and share from Photos.
+                    </div>
 
-                  <div class="divider"></div>
+                    <div class="divider"></div>
 
-                  <button id="startOverBtn" class="btn secondary">START OVER</button>
+                    <button id="startOverBtn" class="btn secondary">START OVER</button>
+                  </div>
                 </div>
               </div>
             </div>
+
+            <footer class="controls controlsDesktop">
+              <button id="startBtn" class="btn primary" disabled>START</button>
+              <button id="resetBtn" class="btn secondary" disabled>RESET</button>
+            </footer>
           </div>
-
-          <!-- DESKTOP CONTROLS -->
-          <footer class="controls controlsDesktop">
-            <button id="startBtn" class="btn primary" disabled>START</button>
-            <button id="resetBtn" class="btn secondary" disabled>RESET</button>
-          </footer>
         </section>
-
       </section>
 
-      <!-- MOBILE BOTTOM BAR (frames + controls) -->
+      <!-- MOBILE BOTTOM BAR -->
       <footer class="mobileBar">
-        <div class="mobileFramesHeader">
-          <div class="mobileFramesTitle">Frames</div>
-          <button id="toggleFramesBtn" class="btn tiny secondary" type="button">SHOW</button>
-        </div>
-
-        <div id="mobileFramesWrap" class="mobileFramesWrap">
-          <div id="framesMobile" class="frameRow"></div>
-        </div>
-
-        <div class="mobileControls">
-          <button id="startBtnMobile" class="btn primary" disabled>START</button>
-          <button id="resetBtnMobile" class="btn secondary" disabled>RESET</button>
+        <div class="mobileBarInner">
+          <div class="mobileBarLeft">
+            <div class="mobileTitle">THE GATHERING ON SUMMIT</div>
+            <div id="mobileSub" class="mobileSub">Photobooth</div>
+          </div>
+          <div class="mobileBarRight">
+            <button id="startBtnMobile" class="btn primary" disabled>START</button>
+            <button id="resetBtnMobile" class="btn secondary" disabled>RESET</button>
+          </div>
         </div>
       </footer>
     </main>
