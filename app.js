@@ -86,6 +86,14 @@
   let resultBlobUrl = "";     // for video (WEBM)
   let resultFilename = "";
 
+  // Share/caption settings (edit these if you want)
+  const SHARE_TEXT = "The Gathering on Summit • LHS Killough";
+  const SHARE_HASHTAGS = "#TheGatheringOnSummit #LHSKillough #Photobooth";
+
+  function getShareCaption() {
+    return `${SHARE_TEXT}\n${SHARE_HASHTAGS}`;
+  }
+
   function setChip(state, text) {
     chipText.textContent = text;
     chipDot.classList.remove("ok", "warn", "bad");
@@ -245,19 +253,16 @@
     }
   }
 
-  // Capture a mirrored frame and apply the selected overlay.
-  // If square=true, center-crops to square (for GIF/Boomerang).
+  // Capture mirrored + overlay. square=true center-crops to square.
   async function captureWithOverlay({ square = false } = {}) {
     if (!video.videoWidth || !video.videoHeight) await sleep(200);
 
     const vw = video.videoWidth;
     const vh = video.videoHeight;
 
-    // base canvas size
     let w = vw;
     let h = vh;
 
-    // for square: take the smallest side and crop center
     let sx = 0, sy = 0, sw = vw, sh = vh;
     if (square) {
       const side = Math.min(vw, vh);
@@ -272,17 +277,12 @@
     canvas.height = h;
     const ctx = canvas.getContext("2d");
 
-    // mirror draw
     ctx.save();
     ctx.translate(w, 0);
     ctx.scale(-1, 1);
-
-    // draw from cropped source
-    // when mirrored, we need to draw the crop region mapped to canvas
     ctx.drawImage(video, sx, sy, sw, sh, 0, 0, w, h);
     ctx.restore();
 
-    // overlay scaled to canvas size
     try {
       const overlay = await loadImage(FRAMES[selectedFrame].src);
       ctx.drawImage(overlay, 0, 0, w, h);
@@ -294,14 +294,11 @@
   async function buildPhotoStrip(images) {
     const loaded = await Promise.all(images.map(loadImage));
 
-    // strip size
     const stripW = 900;
     const photoW = stripW;
-
-    // Keep the “desktop look” consistently: use the first image aspect ratio.
     const photoH = Math.round(photoW * (loaded[0].height / loaded[0].width));
-
     const gap = 20, headerH = 120, footerH = 160;
+
     const totalH = headerH + (photoH * loaded.length) + (gap * (loaded.length - 1)) + footerH;
 
     const c = document.createElement("canvas");
@@ -312,7 +309,6 @@
     ctx.fillStyle = "#0b0b10";
     ctx.fillRect(0, 0, c.width, c.height);
 
-    // header
     ctx.fillStyle = "#6b1020";
     ctx.fillRect(0, 0, stripW, headerH);
     ctx.fillStyle = "#fff";
@@ -327,17 +323,16 @@
       y += photoH + gap;
     }
 
-    // footer
     ctx.fillStyle = "rgba(255,255,255,0.06)";
     ctx.fillRect(0, c.height - footerH, stripW, footerH);
     ctx.fillStyle = "#fff";
     ctx.font = "900 34px Arial";
     ctx.fillText("GATHERING ON SUMMIT 2026", 28, c.height - 92);
+
     ctx.fillStyle = "rgba(255,255,255,0.75)";
     ctx.font = "700 22px Arial";
     ctx.fillText(new Date().toLocaleString(), 28, c.height - 52);
 
-    // border
     ctx.strokeStyle = "rgba(255,255,255,0.16)";
     ctx.lineWidth = 8;
     ctx.strokeRect(12, 12, c.width - 24, c.height - 24);
@@ -345,15 +340,49 @@
     return c.toDataURL("image/png", 0.92);
   }
 
+  function ensureShareUI() {
+    // Insert share UI once (inside .panel under the SAVE IMAGE button)
+    const panel = modal.querySelector(".panel");
+    if (!panel) return;
+
+    if (panel.querySelector("#shareRow")) return;
+
+    const shareBlock = document.createElement("div");
+    shareBlock.innerHTML = `
+      <div class="divider"></div>
+      <div class="panelTitle" style="font-size:14px;margin-bottom:8px;">Share</div>
+      <div id="shareRow" class="shareRow">
+        <button id="shareBtn" class="btn primary small" type="button">SHARE</button>
+        <button id="shareXBtn" class="btn secondary small" type="button">X</button>
+        <button id="copyLinkBtn" class="btn secondary small" type="button">COPY LINK</button>
+        <button id="copyCaptionBtn" class="btn secondary small" type="button">COPY CAPTION</button>
+      </div>
+      <div class="shareHint">
+        SHARE opens your device share sheet (Instagram/TikTok/X if installed).
+      </div>
+    `;
+    // place right after the save button
+    downloadBtn.insertAdjacentElement("afterend", shareBlock);
+
+    // wire handlers
+    panel.querySelector("#shareBtn").addEventListener("click", shareResult);
+    panel.querySelector("#shareXBtn").addEventListener("click", shareToX);
+    panel.querySelector("#copyLinkBtn").addEventListener("click", copyLink);
+    panel.querySelector("#copyCaptionBtn").addEventListener("click", copyCaption);
+  }
+
   function openResultImage({ dataUrl, filename, title, sub }) {
+    ensureShareUI();
+
     resultKind = "image";
     resultDataUrl = dataUrl;
+    if (resultBlobUrl) URL.revokeObjectURL(resultBlobUrl);
     resultBlobUrl = "";
     resultFilename = filename;
 
-    // show image, hide video
     stripPreview.src = dataUrl;
     stripPreview.classList.add("show");
+
     animPreview.classList.remove("show");
     animPreview.removeAttribute("src");
     animPreview.load();
@@ -361,21 +390,25 @@
     resultTitle.textContent = title;
     resultSub.textContent = sub;
 
-    // Email enabled for image
+    // Button label change
+    downloadBtn.textContent = "SAVE IMAGE";
+
     emailBtn.disabled = false;
     emailInput.disabled = false;
-    emailNote.textContent = "Tip: for social apps, download first and share from Photos.";
+    emailNote.textContent = "Tip: SHARE opens the share sheet. You can also save to Photos.";
 
     modal.style.display = "flex";
   }
 
   function openResultVideo({ blobUrl, posterDataUrl, filename, title, sub }) {
+    ensureShareUI();
+
     resultKind = "video";
-    resultDataUrl = posterDataUrl || ""; // used for email fallback
+    resultDataUrl = posterDataUrl || "";
+    if (resultBlobUrl) URL.revokeObjectURL(resultBlobUrl);
     resultBlobUrl = blobUrl;
     resultFilename = filename;
 
-    // show video, hide image
     stripPreview.classList.remove("show");
     stripPreview.removeAttribute("src");
 
@@ -386,10 +419,11 @@
     resultTitle.textContent = title;
     resultSub.textContent = sub;
 
-    // Email: we can only email a PNG via your current GAS (so send poster frame)
+    downloadBtn.textContent = "SAVE VIDEO";
+
     emailBtn.disabled = false;
     emailInput.disabled = false;
-    emailNote.textContent = "Email sends a still image. For the animation, use DOWNLOAD.";
+    emailNote.textContent = "Email sends a still image. Use SAVE/SHARE for the animation.";
 
     modal.style.display = "flex";
   }
@@ -409,7 +443,25 @@
     setChip(stream ? "ok" : "warn", stream ? "Camera ready" : "Ready");
   }
 
-  function downloadResult() {
+  // --- SAVE IMAGE / SAVE VIDEO ---
+  async function saveResult() {
+    // Best UX: use share sheet if available (lets user save to Photos / files / apps)
+    // But user explicitly wants a “Save Image” button; we’ll do:
+    // - If Web Share supports files: share with file (user picks Save Image)
+    // - Else fallback to download link
+    const caption = getShareCaption();
+
+    try {
+      const file = await getResultFile();
+      if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ title: "Photobooth", text: caption, files: [file] });
+        return;
+      }
+    } catch (e) {
+      // fall through to download
+    }
+
+    // fallback: download
     if (resultKind === "image") {
       if (!resultDataUrl) return;
       const a = document.createElement("a");
@@ -418,15 +470,83 @@
       a.click();
       return;
     }
-
-    // video
-    if (!resultBlobUrl) return;
-    const a = document.createElement("a");
-    a.href = resultBlobUrl;
-    a.download = resultFilename || `GOS_Animation_${new Date().toISOString().replace(/[:.]/g, "-")}.webm`;
-    a.click();
+    if (resultKind === "video") {
+      if (!resultBlobUrl) return;
+      const a = document.createElement("a");
+      a.href = resultBlobUrl;
+      a.download = resultFilename || `GOS_Animation_${new Date().toISOString().replace(/[:.]/g, "-")}.webm`;
+      a.click();
+    }
   }
 
+  async function getResultFile() {
+    if (resultKind === "image") {
+      if (!resultDataUrl) return null;
+      const blob = await (await fetch(resultDataUrl)).blob();
+      const name = resultFilename || `GOS_PhotoStrip_${new Date().toISOString().replace(/[:.]/g, "-")}.png`;
+      return new File([blob], name, { type: blob.type || "image/png" });
+    }
+
+    if (resultKind === "video") {
+      if (!resultBlobUrl) return null;
+      const blob = await (await fetch(resultBlobUrl)).blob();
+      const name = resultFilename || `GOS_Animation_${new Date().toISOString().replace(/[:.]/g, "-")}.webm`;
+      return new File([blob], name, { type: blob.type || "video/webm" });
+    }
+
+    return null;
+  }
+
+  // --- SHARE BUTTONS ---
+  async function shareResult() {
+    const caption = getShareCaption();
+    const url = location.href;
+
+    try {
+      const file = await getResultFile();
+      // Prefer file share if possible
+      if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ title: "Photobooth", text: caption, files: [file] });
+        return;
+      }
+      // Fallback: share text + url
+      if (navigator.share) {
+        await navigator.share({ title: "Photobooth", text: caption, url });
+        return;
+      }
+      alert("Sharing is not supported on this browser. Use COPY LINK / COPY CAPTION.");
+    } catch (e) {
+      console.error(e);
+      alert("Share canceled or unavailable.");
+    }
+  }
+
+  function shareToX() {
+    const caption = getShareCaption();
+    const url = location.href;
+    const intent = `https://twitter.com/intent/tweet?text=${encodeURIComponent(caption)}&url=${encodeURIComponent(url)}`;
+    window.open(intent, "_blank", "noopener,noreferrer");
+  }
+
+  async function copyLink() {
+    try {
+      await navigator.clipboard.writeText(location.href);
+      setChip("ok", "Link copied");
+    } catch {
+      alert("Copy failed. Long-press the address bar and copy the link.");
+    }
+  }
+
+  async function copyCaption() {
+    try {
+      await navigator.clipboard.writeText(getShareCaption());
+      setChip("ok", "Caption copied");
+    } catch {
+      alert("Copy failed. Try again.");
+    }
+  }
+
+  // --- EMAIL ---
   async function emailResult() {
     const url = (CONFIG.GAS_POST_URL || "").trim();
     if (!url) {
@@ -440,9 +560,9 @@
       return;
     }
 
-    // For video mode: we only email a still image (poster frame)
+    // For video mode, email still image (poster)
     if (!resultDataUrl) {
-      alert("No image available to email. Use DOWNLOAD.");
+      alert("No image available to email. Use SAVE/SHARE.");
       return;
     }
 
@@ -452,7 +572,6 @@
     const payload = JSON.stringify({ email, pngDataUrl: resultDataUrl });
 
     try {
-      // text/plain avoids CORS preflight on iOS Safari
       await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -470,7 +589,6 @@
     }
   }
 
-  // ===== Animated capture (GIF/Boom) using MediaRecorder on canvas stream =====
   function supportsMediaRecorder() {
     return typeof MediaRecorder !== "undefined" && typeof HTMLCanvasElement !== "undefined";
   }
@@ -484,18 +602,15 @@
     canvas.height = size;
     const ctx = canvas.getContext("2d");
 
-    // build playback list
     let seq = imgs.slice();
     if (boomerang) seq = imgs.concat(imgs.slice().reverse());
 
-    // draw loop
     let idx = 0;
     const draw = () => {
       ctx.fillStyle = "#000";
       ctx.fillRect(0, 0, size, size);
 
       const img = seq[idx];
-      // cover fit
       const scale = Math.max(size / img.width, size / img.height);
       const dw = img.width * scale;
       const dh = img.height * scale;
@@ -506,10 +621,8 @@
       idx = (idx + 1) % seq.length;
     };
 
-    // start capturing stream
     const stream = canvas.captureStream(fps);
 
-    // pick a mime type that’s likely available
     const preferred = [
       "video/webm;codecs=vp9",
       "video/webm;codecs=vp8",
@@ -521,14 +634,12 @@
     const chunks = [];
     rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
 
-    // animate during recording
     const intervalMs = Math.round(1000 / fps);
     const timer = setInterval(draw, intervalMs);
     draw();
 
     rec.start();
 
-    // record length: about 2.2 seconds (adjust by frames count)
     const durationMs = Math.max(1800, Math.min(3200, seq.length * intervalMs));
     await sleep(durationMs);
 
@@ -552,7 +663,6 @@
         return;
       }
 
-      // PHOTO MODE (strip)
       if (selectedMode === MODE.PHOTO) {
         setChip("warn", "Get ready…");
         showPrompt("Get ready for 3 photos", 1200);
@@ -564,14 +674,12 @@
 
         const shots = [];
         for (let s = 1; s <= PHOTO_SHOTS; s++) {
-          showPrompt(`Photo ${s} of ${PHOTO_SHOTS} • Say cheese`, 950);
-
+          showPrompt(`Photo ${s} of ${PHOTO_SHOTS}`, 900);
           for (let t = COUNTDOWN_SECONDS; t >= 1; t--) {
             showCountdown(t);
             await sleep(900);
           }
           hideCountdown();
-
           flashFlicker();
           shots.push(await captureWithOverlay({ square: false }));
           await sleep(450);
@@ -579,18 +687,18 @@
 
         setChip("warn", "Building strip…");
         const strip = await buildPhotoStrip(shots);
+
         openResultImage({
           dataUrl: strip,
           filename: `GOS_PhotoStrip_${new Date().toISOString().replace(/[:.]/g, "-")}.png`,
           title: "Your Photo Strip",
-          sub: "Download it or email it to yourself."
+          sub: "Save or share to social apps."
         });
 
         setChip("ok", "Done");
         return;
       }
 
-      // GIF / BOOMERANG MODE (animated square)
       if (!supportsMediaRecorder()) {
         alert("Animated capture is not supported on this browser. Switching to Photo mode.");
         setMode(MODE.PHOTO);
@@ -598,17 +706,15 @@
       }
 
       setChip("warn", "Get ready…");
-      showPrompt(selectedMode === MODE.GIF ? "Capturing animation" : "Capturing boomerang", 1200);
+      showPrompt(selectedMode === MODE.GIF ? "Capturing GIF…" : "Capturing Boomerang…", 1200);
       await sleep(700);
 
       startBtn.disabled = true;
       startBtnMobile.disabled = true;
 
-      // capture a series of square frames quickly
       const frameCount = 14;
       const frames = [];
       for (let i = 0; i < frameCount; i++) {
-        // quick flicker on first and last looks “photo booth”
         if (i === 0 || i === frameCount - 1) flashFlicker();
         frames.push(await captureWithOverlay({ square: true }));
         await sleep(90);
@@ -620,7 +726,6 @@
         fps: 12
       });
 
-      // Use the first frame as a poster (email still)
       const poster = frames[0];
 
       openResultVideo({
@@ -630,7 +735,7 @@
           ? `GOS_GIF_${new Date().toISOString().replace(/[:.]/g, "-")}.webm`
           : `GOS_Boomerang_${new Date().toISOString().replace(/[:.]/g, "-")}.webm`,
         title: selectedMode === MODE.GIF ? "Your GIF" : "Your Boomerang",
-        sub: "Download to save. Email sends a still image."
+        sub: "Save or share to social apps."
       });
 
       setChip("ok", "Done");
@@ -645,7 +750,7 @@
     }
   }
 
-  // ===== Navigation =====
+  // Navigation
   function goMode() {
     showScreen(screenMode);
     topTitleSub.textContent = "Choose a mode";
@@ -677,7 +782,7 @@
     showPrompt("Press START when ready", 1200);
   }
 
-  // ===== Mode selection handlers =====
+  // Mode selection
   modePhotoBtn.addEventListener("click", () => setMode(MODE.PHOTO));
   modeGifBtn.addEventListener("click", () => setMode(MODE.GIF));
   modeBoomBtn.addEventListener("click", () => setMode(MODE.BOOM));
@@ -689,37 +794,23 @@
 
   // template nav
   templateBackBtn.addEventListener("click", goMode);
-  templateContinueBtn.addEventListener("click", () => {
-    goInstructions();
-  });
+  templateContinueBtn.addEventListener("click", goInstructions);
 
   // instructions nav
   instructionsBackBtn.addEventListener("click", goTemplate);
-  beginCaptureBtn.addEventListener("click", async () => {
-    await goCapture();
-  });
+  beginCaptureBtn.addEventListener("click", goCapture);
 
   // capture buttons
   startBtn.addEventListener("click", startSession);
-  resetBtn.addEventListener("click", () => {
-    // Reset goes back to template selection (keeps mode)
-    startOver();
-    goTemplate();
-  });
+  resetBtn.addEventListener("click", () => { startOver(); goTemplate(); });
 
   startBtnMobile.addEventListener("click", startSession);
-  resetBtnMobile.addEventListener("click", () => {
-    startOver();
-    goTemplate();
-  });
+  resetBtnMobile.addEventListener("click", () => { startOver(); goTemplate(); });
 
   // result buttons
-  downloadBtn.addEventListener("click", downloadResult);
+  downloadBtn.addEventListener("click", saveResult);
   emailBtn.addEventListener("click", emailResult);
-  startOverBtn.addEventListener("click", () => {
-    startOver();
-    goTemplate();
-  });
+  startOverBtn.addEventListener("click", () => { startOver(); goTemplate(); });
 
   // init
   buildFramePicker();
