@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>Gathering on Summit Photobooth</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <!-- DESKTOP SIDEBAR -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brandMark">K</div>
+        <div>
+          <div class="brandTitle">The Gathering on Summit</div>
+          <div class="brandSub">LHS Killough • Photobooth</div>
+        </div>
+      </div>
+
+      <div class="sectionTitle">Choose a Frame</div>
+      <div id="frames" class="frameGrid"></div>
+
+      <div class="help">
+        <div class="helpTitle">If camera doesn’t show</div>
+        <div>• iPad: open in Safari (not inside Canvas app).</div>
+        <div>• Desktop: allow camera for this site.</div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <!-- CHANGED: top title now has an id for JS to update -->
+        <div id="appTitle" class="topTitle">The Gathering on Summit Photo Booth</div>
+
+        <div class="chip">
+          <span id="chipDot" class="dot warn"></span>
+          <span id="chipText">Choose a mode</span>
+        </div>
+      </header>
+
+      <section class="stage">
+
+        <!-- =========================
+             SCREEN 1: HOME (Mode select)
+             ========================= -->
+        <section id="screenHome" class="screen" style="display:block;">
+          <div class="screenInner">
+            <div class="card">
+              <h1 class="hTitle">Welcome</h1>
+              <div class="hSub">
+                Choose what you want to create, then pick a frame and follow the instructions.
+              </div>
+
+              <div class="modeRow">
+                <button id="modePhotoBtn" class="modeBtn" type="button">
+                  <div class="t">Photo</div>
+                  <div class="d">3-shot photo strip</div>
+                </button>
+
+                <button id="modeGifBtn" class="modeBtn" type="button">
+                  <div class="t">GIF</div>
+                  <div class="d">Animated capture (preview as strip)</div>
+                </button>
+
+                <button id="modeBoomBtn" class="modeBtn" type="button">
+                  <div class="t">Boomerang</div>
+                  <div class="d">Forward + reverse capture (preview as strip)</div>
+                </button>
+              </div>
+
+              <div class="help" style="margin-top:18px;">
+                <div class="helpTitle">Tips</div>
+                <div>• iPad: open in Safari (not inside Canvas app).</div>
+                <div>• Allow camera access when prompted.</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- =========================
+             SCREEN 2: TEMPLATES (Frame select)
+             ========================= -->
+        <section id="screenTemplates" class="screen">
+          <div class="screenInner">
+            <div class="card">
+              <h2 class="hTitle" style="font-size:24px; margin:0;">Choose a Frame</h2>
+              <div class="hSub">Tap a frame below. You can change it anytime.</div>
+
+              <!-- Desktop-style frame grid (still works on mobile too) -->
+              <div style="margin-top:14px;">
+                <div id="frames" class="frameGrid"></div>
+              </div>
+
+              <div class="navRow">
+                <button id="backToHomeBtn" class="btn secondary" type="button">BACK</button>
+                <button id="toInstructionsBtn" class="btn primary" type="button">CONTINUE</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- =========================
+             SCREEN 3: INSTRUCTIONS
+             ========================= -->
+        <section id="screenInstructions" class="screen">
+          <div class="screenInner">
+            <div class="card">
+              <h2 class="hTitle" style="font-size:24px; margin:0;">Instructions</h2>
+              <div class="hSub" style="margin-bottom:12px;">
+                Follow these steps, then start when you’re ready.
+              </div>
+
+              <div class="help" style="margin-top:0; border-top:none; padding-top:0;">
+                <div class="helpTitle">How it works</div>
+                <div>• Position yourself in the camera preview.</div>
+                <div>• Press START when ready.</div>
+                <div>• The app will capture automatically.</div>
+                <div>• Download or email your result.</div>
+              </div>
+
+              <div class="navRow">
+                <button id="backToTemplatesBtn" class="btn secondary" type="button">BACK</button>
+                <button id="beginCaptureBtn" class="btn primary" type="button">START NOW</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- =========================
+             SCREEN 4: CAPTURE (Camera + overlay)
+             ========================= -->
+        <section id="screenCapture" class="screen">
+          <div class="booth">
+            <video id="video" playsinline autoplay muted></video>
+
+            <div class="overlay">
+              <img id="frameOverlay" alt="" />
+            </div>
+
+            <div id="prompt" class="prompt" aria-live="polite"></div>
+
+            <div id="flash" class="flash"></div>
+            <div id="countdown" class="countdown"></div>
+
+            <!-- RESULT MODAL -->
+            <div id="modal" class="modal">
+              <div class="modalCard">
+                <div class="preview">
+                  <img id="stripPreview" alt="Photo strip preview" />
+                </div>
+                <div class="panel">
+                  <div class="panelTitle">Your Photo Strip</div>
+                  <div class="panelSub">Download it or email it to yourself.</div>
+
+                  <button id="downloadBtn" class="btn primary">DOWNLOAD</button>
+
+                  <div class="divider"></div>
+
+                  <label class="label">Email</label>
+                  <input id="emailInput" class="input" type="email" placeholder="you@example.com" />
+
+                  <button id="emailBtn" class="btn primary">EMAIL TO ME</button>
+                  <div class="tinyNote">Instagram: download the image and share from Photos.</div>
+
+                  <div class="divider"></div>
+
+                  <button id="startOverBtn" class="btn secondary">START OVER</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- DESKTOP CONTROLS -->
+          <footer class="controls controlsDesktop">
+            <button id="startBtn" class="btn primary" disabled>START</button>
+            <button id="resetBtn" class="btn secondary" disabled>RESET</button>
+          </footer>
+        </section>
+
+      </section>
+
+      <!-- MOBILE BOTTOM BAR (frames + controls) -->
+      <footer class="mobileBar">
+        <div class="mobileFramesHeader">
+          <div class="mobileFramesTitle">Frames</div>
+          <button id="toggleFramesBtn" class="btn tiny secondary" type="button">SHOW</button>
+        </div>
+
+        <div id="mobileFramesWrap" class="mobileFramesWrap">
+          <div id="framesMobile" class="frameRow"></div>
+        </div>
+
+        <div class="mobileControls">
+          <button id="startBtnMobile" class="btn primary" disabled>START</button>
+          <button id="resetBtnMobile" class="btn secondary" disabled>RESET</button>
+        </div>
+      </footer>
+    </main>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
