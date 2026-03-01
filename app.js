@@ -86,14 +86,6 @@
   let resultBlobUrl = "";     // for video (WEBM)
   let resultFilename = "";
 
-  // Share/caption settings (edit these if you want)
-  const SHARE_TEXT = "The Gathering on Summit • LHS Killough";
-  const SHARE_HASHTAGS = "#TheGatheringOnSummit #LHSKillough #Photobooth";
-
-  function getShareCaption() {
-    return `${SHARE_TEXT}\n${SHARE_HASHTAGS}`;
-  }
-
   function setChip(state, text) {
     chipText.textContent = text;
     chipDot.classList.remove("ok", "warn", "bad");
@@ -340,40 +332,7 @@
     return c.toDataURL("image/png", 0.92);
   }
 
-  function ensureShareUI() {
-    // Insert share UI once (inside .panel under the SAVE IMAGE button)
-    const panel = modal.querySelector(".panel");
-    if (!panel) return;
-
-    if (panel.querySelector("#shareRow")) return;
-
-    const shareBlock = document.createElement("div");
-    shareBlock.innerHTML = `
-      <div class="divider"></div>
-      <div class="panelTitle" style="font-size:14px;margin-bottom:8px;">Share</div>
-      <div id="shareRow" class="shareRow">
-        <button id="shareBtn" class="btn primary small" type="button">SHARE</button>
-        <button id="shareXBtn" class="btn secondary small" type="button">X</button>
-        <button id="copyLinkBtn" class="btn secondary small" type="button">COPY LINK</button>
-        <button id="copyCaptionBtn" class="btn secondary small" type="button">COPY CAPTION</button>
-      </div>
-      <div class="shareHint">
-        SHARE opens your device share sheet (Instagram/TikTok/X if installed).
-      </div>
-    `;
-    // place right after the save button
-    downloadBtn.insertAdjacentElement("afterend", shareBlock);
-
-    // wire handlers
-    panel.querySelector("#shareBtn").addEventListener("click", shareResult);
-    panel.querySelector("#shareXBtn").addEventListener("click", shareToX);
-    panel.querySelector("#copyLinkBtn").addEventListener("click", copyLink);
-    panel.querySelector("#copyCaptionBtn").addEventListener("click", copyCaption);
-  }
-
   function openResultImage({ dataUrl, filename, title, sub }) {
-    ensureShareUI();
-
     resultKind = "image";
     resultDataUrl = dataUrl;
     if (resultBlobUrl) URL.revokeObjectURL(resultBlobUrl);
@@ -390,19 +349,13 @@
     resultTitle.textContent = title;
     resultSub.textContent = sub;
 
-    // Button label change
     downloadBtn.textContent = "SAVE IMAGE";
-
-    emailBtn.disabled = false;
-    emailInput.disabled = false;
-    emailNote.textContent = "Tip: SHARE opens the share sheet. You can also save to Photos.";
+    emailNote.textContent = "Tip: on iPhone/iPad you can save from the browser if needed.";
 
     modal.style.display = "flex";
   }
 
   function openResultVideo({ blobUrl, posterDataUrl, filename, title, sub }) {
-    ensureShareUI();
-
     resultKind = "video";
     resultDataUrl = posterDataUrl || "";
     if (resultBlobUrl) URL.revokeObjectURL(resultBlobUrl);
@@ -420,10 +373,7 @@
     resultSub.textContent = sub;
 
     downloadBtn.textContent = "SAVE VIDEO";
-
-    emailBtn.disabled = false;
-    emailInput.disabled = false;
-    emailNote.textContent = "Email sends a still image. Use SAVE/SHARE for the animation.";
+    emailNote.textContent = "Email sends a still image. Use SAVE for the animation.";
 
     modal.style.display = "flex";
   }
@@ -441,42 +391,6 @@
     resultFilename = "";
     emailInput.value = "";
     setChip(stream ? "ok" : "warn", stream ? "Camera ready" : "Ready");
-  }
-
-  // --- SAVE IMAGE / SAVE VIDEO ---
-  async function saveResult() {
-    // Best UX: use share sheet if available (lets user save to Photos / files / apps)
-    // But user explicitly wants a “Save Image” button; we’ll do:
-    // - If Web Share supports files: share with file (user picks Save Image)
-    // - Else fallback to download link
-    const caption = getShareCaption();
-
-    try {
-      const file = await getResultFile();
-      if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ title: "Photobooth", text: caption, files: [file] });
-        return;
-      }
-    } catch (e) {
-      // fall through to download
-    }
-
-    // fallback: download
-    if (resultKind === "image") {
-      if (!resultDataUrl) return;
-      const a = document.createElement("a");
-      a.href = resultDataUrl;
-      a.download = resultFilename || `GOS_PhotoStrip_${new Date().toISOString().replace(/[:.]/g, "-")}.png`;
-      a.click();
-      return;
-    }
-    if (resultKind === "video") {
-      if (!resultBlobUrl) return;
-      const a = document.createElement("a");
-      a.href = resultBlobUrl;
-      a.download = resultFilename || `GOS_Animation_${new Date().toISOString().replace(/[:.]/g, "-")}.webm`;
-      a.click();
-    }
   }
 
   async function getResultFile() {
@@ -497,56 +411,38 @@
     return null;
   }
 
-  // --- SHARE BUTTONS ---
-  async function shareResult() {
-    const caption = getShareCaption();
-    const url = location.href;
-
+  // SAVE button only
+  async function saveResult() {
+    // Prefer OS save sheet when possible (best for iPhone/iPad)
     try {
       const file = await getResultFile();
-      // Prefer file share if possible
-      if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ title: "Photobooth", text: caption, files: [file] });
+      if (file && navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
+        await navigator.share({ files: [file] });
         return;
       }
-      // Fallback: share text + url
-      if (navigator.share) {
-        await navigator.share({ title: "Photobooth", text: caption, url });
-        return;
-      }
-      alert("Sharing is not supported on this browser. Use COPY LINK / COPY CAPTION.");
     } catch (e) {
-      console.error(e);
-      alert("Share canceled or unavailable.");
+      // fallback below
+    }
+
+    // fallback: download
+    if (resultKind === "image") {
+      if (!resultDataUrl) return;
+      const a = document.createElement("a");
+      a.href = resultDataUrl;
+      a.download = resultFilename || `GOS_PhotoStrip_${new Date().toISOString().replace(/[:.]/g, "-")}.png`;
+      a.click();
+      return;
+    }
+
+    if (resultKind === "video") {
+      if (!resultBlobUrl) return;
+      const a = document.createElement("a");
+      a.href = resultBlobUrl;
+      a.download = resultFilename || `GOS_Animation_${new Date().toISOString().replace(/[:.]/g, "-")}.webm`;
+      a.click();
     }
   }
 
-  function shareToX() {
-    const caption = getShareCaption();
-    const url = location.href;
-    const intent = `https://twitter.com/intent/tweet?text=${encodeURIComponent(caption)}&url=${encodeURIComponent(url)}`;
-    window.open(intent, "_blank", "noopener,noreferrer");
-  }
-
-  async function copyLink() {
-    try {
-      await navigator.clipboard.writeText(location.href);
-      setChip("ok", "Link copied");
-    } catch {
-      alert("Copy failed. Long-press the address bar and copy the link.");
-    }
-  }
-
-  async function copyCaption() {
-    try {
-      await navigator.clipboard.writeText(getShareCaption());
-      setChip("ok", "Caption copied");
-    } catch {
-      alert("Copy failed. Try again.");
-    }
-  }
-
-  // --- EMAIL ---
   async function emailResult() {
     const url = (CONFIG.GAS_POST_URL || "").trim();
     if (!url) {
@@ -562,7 +458,7 @@
 
     // For video mode, email still image (poster)
     if (!resultDataUrl) {
-      alert("No image available to email. Use SAVE/SHARE.");
+      alert("No image available to email. Use SAVE.");
       return;
     }
 
@@ -665,8 +561,8 @@
 
       if (selectedMode === MODE.PHOTO) {
         setChip("warn", "Get ready…");
-        showPrompt("Get ready for 3 photos", 1200);
-        await sleep(850);
+        showPrompt("Get ready for 3 photos", 1000);
+        await sleep(750);
 
         setChip("warn", "Capturing…");
         startBtn.disabled = true;
@@ -674,15 +570,15 @@
 
         const shots = [];
         for (let s = 1; s <= PHOTO_SHOTS; s++) {
-          showPrompt(`Photo ${s} of ${PHOTO_SHOTS}`, 900);
+          showPrompt(`Photo ${s} of ${PHOTO_SHOTS}`, 800);
           for (let t = COUNTDOWN_SECONDS; t >= 1; t--) {
             showCountdown(t);
-            await sleep(900);
+            await sleep(850);
           }
           hideCountdown();
           flashFlicker();
           shots.push(await captureWithOverlay({ square: false }));
-          await sleep(450);
+          await sleep(420);
         }
 
         setChip("warn", "Building strip…");
@@ -692,7 +588,7 @@
           dataUrl: strip,
           filename: `GOS_PhotoStrip_${new Date().toISOString().replace(/[:.]/g, "-")}.png`,
           title: "Your Photo Strip",
-          sub: "Save or share to social apps."
+          sub: "Save or email it to yourself."
         });
 
         setChip("ok", "Done");
@@ -706,8 +602,8 @@
       }
 
       setChip("warn", "Get ready…");
-      showPrompt(selectedMode === MODE.GIF ? "Capturing GIF…" : "Capturing Boomerang…", 1200);
-      await sleep(700);
+      showPrompt(selectedMode === MODE.GIF ? "Capturing GIF…" : "Capturing Boomerang…", 1000);
+      await sleep(650);
 
       startBtn.disabled = true;
       startBtnMobile.disabled = true;
@@ -735,7 +631,7 @@
           ? `GOS_GIF_${new Date().toISOString().replace(/[:.]/g, "-")}.webm`
           : `GOS_Boomerang_${new Date().toISOString().replace(/[:.]/g, "-")}.webm`,
         title: selectedMode === MODE.GIF ? "Your GIF" : "Your Boomerang",
-        sub: "Save or share to social apps."
+        sub: "Save it or email a still image."
       });
 
       setChip("ok", "Done");
@@ -779,7 +675,7 @@
     if (!ok) return;
 
     setChip("ok", "Camera ready");
-    showPrompt("Press START when ready", 1200);
+    showPrompt("Press START when ready", 1000);
   }
 
   // Mode selection
