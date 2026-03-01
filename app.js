@@ -1,4 +1,4 @@
-/* app.js — Full file (Photo + GIF (3 stills -> loop) + Boomerang (record time shown)) */
+/* app.js — Full file (Photo + GIF (3 stills -> loop) + Boomerang (record time shown) + Mobile Share download) */
 (() => {
   const CONFIG = window.PHOTOBOOTH_CONFIG || { GAS_POST_URL: "" };
 
@@ -61,14 +61,14 @@
   const COUNTDOWN_SECONDS = 3;
 
   // GIF (3 stills -> animated loop)
-  const GIF_SHOTS = 3;           // take 3 images like Photo mode
-  const GIF_FPS = 2;             // 2 frames/sec (each frame ~0.5s)
-  const GIF_LOOP_SECONDS = 4;    // total loop length exported (webm)
+  const GIF_SHOTS = 3;
+  const GIF_FPS = 2;
+  const GIF_LOOP_SECONDS = 4; // exported as webm (GIF-like)
 
   // BOOMERANG timing
-  const BOOM_RECORD_MS = 1200;   // how long we record the live action
+  const BOOM_RECORD_MS = 1200; // actual “recording” time
   const BOOM_FPS = 18;
-  const BOOM_EXPORT_MS = 2400;   // forward + reverse playback export length
+  const BOOM_EXPORT_MS = 2400; // forward + reverse export length
 
   // Make sure these file paths exist in your repo.
   const FRAMES = [
@@ -86,7 +86,7 @@
   let busy = false;
 
   // Results
-  let stripDataUrl = "";        // photo result (png)
+  let stripDataUrl = "";        // photo result (png dataURL)
   let animBlobUrl = "";         // animation result (objectURL)
   let animMime = "";            // recorder mime
   let lastResultType = "photo"; // "photo" | "anim"
@@ -495,44 +495,61 @@
     showPrompt("Press START when ready", 1200);
   }
 
-  // iOS-friendly download for photo; webm download for animations
-  function downloadResult() {
+  // ---------- DOWNLOAD (Mobile share sheet, desktop direct download) ----------
+  async function downloadResult() {
     const isAnim = lastResultType === "anim";
+    const isMobile = matchMedia("(max-width: 980px)").matches;
 
-    if (isAnim && animBlobUrl) {
-      const ext = "webm";
-      const filename = `GOS_${selectedMode === MODES.BOOM ? "Boomerang" : "GIF"}_${new Date()
-        .toISOString()
-        .replace(/[:.]/g, "-")}.${ext}`;
-      const a = document.createElement("a");
-      a.href = animBlobUrl;
-      a.download = filename;
-      a.click();
-      return;
+    // Helper: convert dataURL -> Blob
+    async function dataUrlToBlob(dataUrl) {
+      const res = await fetch(dataUrl);
+      return await res.blob();
     }
 
-    // PHOTO download
-    if (!stripDataUrl) return;
+    // Build the file payload
+    let blob, filename, mime;
 
-    const filename = `GOS_PhotoStrip_${new Date().toISOString().replace(/[:.]/g, "-")}.png`;
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    if (isAnim) {
+      if (!animBlobUrl) return;
+      mime = animMime || "video/webm";
+      blob = await (await fetch(animBlobUrl)).blob();
+      filename = `GOS_${selectedMode === MODES.BOOM ? "Boomerang" : "GIF"}_${new Date()
+        .toISOString()
+        .replace(/[:.]/g, "-")}.webm`;
+    } else {
+      if (!stripDataUrl) return;
+      mime = "image/png";
+      blob = await dataUrlToBlob(stripDataUrl);
+      filename = `GOS_PhotoStrip_${new Date().toISOString().replace(/[:.]/g, "-")}.png`;
+    }
 
-    if (isIOS) {
-      const w = window.open();
-      if (w) {
-        w.document.write(`<title>${filename}</title>`);
-        w.document.write(`<meta name="viewport" content="width=device-width,initial-scale=1">`);
-        w.document.write(`<body style="margin:0;background:#000;display:flex;justify-content:center;align-items:center;min-height:100vh;">
-          <img src="${stripDataUrl}" style="max-width:100%;height:auto;display:block;" />
-        </body>`);
-        return;
+    // MOBILE: Share Sheet (Save to Photos / Files / apps) when available
+    if (isMobile && navigator.share) {
+      try {
+        const file = new File([blob], filename, { type: mime });
+        const canShareFiles = !navigator.canShare || navigator.canShare({ files: [file] });
+        if (canShareFiles) {
+          await navigator.share({
+            files: [file],
+            title: "Photo Booth Download",
+            text: "Save or share your photo booth result.",
+          });
+          return;
+        }
+      } catch (e) {
+        // user canceled or share failed -> fall back to normal download
       }
     }
 
+    // DESKTOP + fallback: direct download
+    const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = stripDataUrl;
+    a.href = url;
     a.download = filename;
+    document.body.appendChild(a);
     a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
   }
 
   async function emailStrip() {
@@ -690,7 +707,8 @@
     // 1) collect frames
     const frames = [];
     const temp = document.createElement("canvas");
-    temp.width = size; temp.height = size;
+    temp.width = size;
+    temp.height = size;
     const tctx = temp.getContext("2d");
 
     const start = performance.now();
