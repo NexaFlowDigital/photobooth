@@ -290,8 +290,8 @@ video{
 .btn{
   border:none;
   border-radius:16px;
-  padding:14px 18px;
-  font-size:16px;
+  padding:10px 14px;
+  font-size:13px;
   font-weight:900;
   cursor:pointer;
   min-width:170px;
@@ -514,7 +514,7 @@ video{
 
   /* RESULT MODAL: also no scrolling */
   .modal{
-    padding:10px;
+    padding:7px;
     overflow:hidden; /* no page scroll */
     align-items:center;
   }
