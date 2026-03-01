@@ -1,36 +1,59 @@
 (() => {
   const CONFIG = window.PHOTOBOOTH_CONFIG || { GAS_POST_URL: "" };
 
-  const framesEl = document.getElementById("frames");
-  const framesMobileEl = document.getElementById("framesMobile");
-  const toggleFramesBtn = document.getElementById("toggleFramesBtn");
-  const mobileFramesWrap = document.getElementById("mobileFramesWrap");
+  // ---------- DOM ----------
+  const $ = (id) => document.getElementById(id);
 
-  const frameOverlay = document.getElementById("frameOverlay");
-  const video = document.getElementById("video");
-  const chipDot = document.getElementById("chipDot");
-  const chipText = document.getElementById("chipText");
-  const flashEl = document.getElementById("flash");
-  const countdownEl = document.getElementById("countdown");
-  const promptEl = document.getElementById("prompt");
+  const topTitleSub = $("topTitleSub");
+  const mobileSub = $("mobileSub");
 
-  const startBtn = document.getElementById("startBtn");
-  const resetBtn = document.getElementById("resetBtn");
+  const screenMode = $("screenMode");
+  const screenTemplate = $("screenTemplate");
+  const screenInstructions = $("screenInstructions");
+  const screenCapture = $("screenCapture");
 
-  const startBtnMobile = document.getElementById("startBtnMobile");
-  const resetBtnMobile = document.getElementById("resetBtnMobile");
+  const modePhotoBtn = $("modePhotoBtn");
+  const modeGifBtn = $("modeGifBtn");
+  const modeBoomBtn = $("modeBoomBtn");
+  const modeContinueBtn = $("modeContinueBtn");
 
-  const modal = document.getElementById("modal");
-  const stripPreview = document.getElementById("stripPreview");
-  const downloadBtn = document.getElementById("downloadBtn");
-  const emailInput = document.getElementById("emailInput");
-  const emailBtn = document.getElementById("emailBtn");
-  const startOverBtn = document.getElementById("startOverBtn");
+  const framesEl = $("frames");
+  const templateBackBtn = $("templateBackBtn");
+  const templateContinueBtn = $("templateContinueBtn");
 
-  const home = document.getElementById("home");
-  const beginBtn = document.getElementById("beginBtn");
+  const instructionsSub = $("instructionsSub");
+  const instructionsBackBtn = $("instructionsBackBtn");
+  const beginCaptureBtn = $("beginCaptureBtn");
 
-  const boothEl = document.querySelector(".booth"); // <-- used for crop aspect
+  const frameOverlay = $("frameOverlay");
+  const video = $("video");
+  const boothEl = document.querySelector(".booth");
+
+  const chipDot = $("chipDot");
+  const chipText = $("chipText");
+
+  const flashEl = $("flash");
+  const countdownEl = $("countdown");
+  const promptEl = $("prompt");
+
+  const startBtn = $("startBtn");
+  const resetBtn = $("resetBtn");
+  const startBtnMobile = $("startBtnMobile");
+  const resetBtnMobile = $("resetBtnMobile");
+
+  const modal = $("modal");
+  const stripPreview = $("stripPreview");
+  const animPreview = $("animPreview");
+  const resultTitle = $("resultTitle");
+  const resultSub = $("resultSub");
+
+  const downloadBtn = $("downloadBtn");
+  const emailInput = $("emailInput");
+  const emailBtn = $("emailBtn");
+  const startOverBtn = $("startOverBtn");
+
+  // ---------- CONFIG ----------
+  const MODES = { PHOTO: "photo", GIF: "gif", BOOM: "boom" };
 
   const SHOTS = 3;
   const COUNTDOWN_SECONDS = 3;
@@ -42,27 +65,40 @@
     { name: "Texas Star",        src: "assets/frames/frame-texas-star.png" },
   ];
 
+  // ---------- STATE ----------
+  let selectedMode = null;
   let selectedFrame = 0;
+
   let stream = null;
-  let stripDataUrl = "";
   let busy = false;
 
+  let stripDataUrl = ""; // photo result only (for now)
+
+  // ---------- UI HELPERS ----------
   function setChip(state, text) {
     chipText.textContent = text;
     chipDot.classList.remove("ok", "warn", "bad");
     chipDot.classList.add(state);
   }
 
-  function sleep(ms) {
-    return new Promise(r => setTimeout(r, ms));
-  }
-
   function showPrompt(text, ms = 900) {
+    if (!promptEl) return;
     promptEl.textContent = text;
     promptEl.classList.add("show");
-    if (ms > 0) {
-      setTimeout(() => promptEl.classList.remove("show"), ms);
-    }
+    if (ms > 0) setTimeout(() => promptEl.classList.remove("show"), ms);
+  }
+
+  function sleep(ms) {
+    return new Promise((r) => setTimeout(r, ms));
+  }
+
+  function showCountdown(n) {
+    countdownEl.style.opacity = 1;
+    countdownEl.textContent = String(n);
+  }
+  function hideCountdown() {
+    countdownEl.style.opacity = 0;
+    countdownEl.textContent = "";
   }
 
   function flashFlicker() {
@@ -75,22 +111,12 @@
       { o: 0.70, t: 140 },
       { o: 0.00, t: 220 },
     ];
-
     steps.forEach(s => setTimeout(() => { flashEl.style.opacity = s.o; }, s.t));
 
     setTimeout(() => {
       flashEl.style.transition = "opacity 220ms ease";
       flashEl.style.opacity = 0;
     }, 260);
-  }
-
-  function showCountdown(n) {
-    countdownEl.style.opacity = 1;
-    countdownEl.textContent = String(n);
-  }
-  function hideCountdown() {
-    countdownEl.style.opacity = 0;
-    countdownEl.textContent = "";
   }
 
   function setButtonsEnabled(enabled) {
@@ -100,12 +126,43 @@
     resetBtnMobile.disabled = !enabled;
   }
 
-  function buildFramePickerDesktop() {
+  function setScreen(activeEl) {
+    [screenMode, screenTemplate, screenInstructions, screenCapture].forEach((el) => {
+      if (!el) return;
+      el.classList.toggle("show", el === activeEl);
+    });
+
+    const captureActive = activeEl === screenCapture;
+    document.body.classList.toggle("captureActive", captureActive);
+
+    // top labels
+    if (captureActive) {
+      topTitleSub.textContent = "Capture";
+      mobileSub.textContent = "Capture";
+    } else if (activeEl === screenMode) {
+      topTitleSub.textContent = "Choose a mode";
+      mobileSub.textContent = "Photobooth";
+    } else if (activeEl === screenTemplate) {
+      topTitleSub.textContent = "Choose a template";
+      mobileSub.textContent = "Template";
+    } else if (activeEl === screenInstructions) {
+      topTitleSub.textContent = "Instructions";
+      mobileSub.textContent = "Instructions";
+    }
+  }
+
+  // ---------- FRAMES ----------
+  function buildFramePicker() {
     framesEl.innerHTML = "";
     FRAMES.forEach((f, i) => {
       const card = document.createElement("div");
       card.className = "frameCard" + (i === selectedFrame ? " selected" : "");
-      card.addEventListener("click", () => setFrame(i));
+      card.addEventListener("click", () => {
+        selectedFrame = i;
+        frameOverlay.src = FRAMES[i].src;
+        syncFrameSelectedUI();
+        templateContinueBtn.disabled = false;
+      });
 
       const thumb = document.createElement("div");
       thumb.className = "frameThumb";
@@ -123,54 +180,25 @@
     });
   }
 
-  function buildFramePickerMobile() {
-    if (!framesMobileEl) return;
-    framesMobileEl.innerHTML = "";
-    FRAMES.forEach((f, i) => {
-      const pill = document.createElement("div");
-      pill.className = "framePill" + (i === selectedFrame ? " selected" : "");
-      pill.addEventListener("click", () => setFrame(i));
-
-      const img = document.createElement("img");
-      img.src = f.src;
-
-      const name = document.createElement("div");
-      name.className = "name";
-      name.textContent = f.name;
-
-      pill.appendChild(img);
-      pill.appendChild(name);
-      framesMobileEl.appendChild(pill);
-    });
-  }
-
   function syncFrameSelectedUI() {
     [...document.querySelectorAll(".frameCard")].forEach((el, idx) => {
       el.classList.toggle("selected", idx === selectedFrame);
     });
-    [...document.querySelectorAll(".framePill")].forEach((el, idx) => {
-      el.classList.toggle("selected", idx === selectedFrame);
-    });
   }
 
-  function setFrame(i) {
-    selectedFrame = i;
-    frameOverlay.src = FRAMES[i].src;
-    syncFrameSelectedUI();
-  }
-
+  // ---------- CAMERA ----------
   async function ensureCamera() {
     if (stream) return true;
 
     try {
       stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
-        audio: false
+        audio: false,
       });
 
       video.srcObject = stream;
 
-      await new Promise(resolve => {
+      await new Promise((resolve) => {
         video.onloadedmetadata = () => {
           video.play();
           resolve();
@@ -197,7 +225,7 @@
     });
   }
 
-  // ✅ FIX #1: crop capture to match booth aspect ratio (prevents tall portrait strip on phones)
+  // Crop capture to match booth aspect ratio (prevents weird tall crop on phones)
   async function captureWithOverlay() {
     if (!video.videoWidth || !video.videoHeight) await sleep(200);
 
@@ -212,16 +240,13 @@
     let sx = 0, sy = 0, sw = vw, sh = vh;
 
     if (srcAspect > targetAspect) {
-      // too wide -> crop width
       sw = Math.round(vh * targetAspect);
       sx = Math.round((vw - sw) / 2);
     } else {
-      // too tall -> crop height
       sh = Math.round(vw / targetAspect);
       sy = Math.round((vh - sh) / 2);
     }
 
-    // output resolution
     const outW = 1200;
     const outH = Math.round(outW / targetAspect);
 
@@ -294,23 +319,20 @@
     return c.toDataURL("image/png", 0.92);
   }
 
-  function openResult(dataUrl) {
+  // ---------- RESULT MODAL ----------
+  function openResultPhoto(dataUrl) {
     stripDataUrl = dataUrl;
+
+    resultTitle.textContent = "Your Photo Strip";
+    resultSub.textContent = "Download it or email it to yourself.";
+
     stripPreview.src = dataUrl;
+    stripPreview.classList.add("show");
+    animPreview.classList.remove("show");
+    animPreview.removeAttribute("src");
 
     modal.style.display = "flex";
     document.body.classList.add("modalOpen");
-
-    const preview = document.querySelector(".preview");
-    if (preview) {
-      preview.scrollTop = 0;
-      requestAnimationFrame(() => {
-        preview.scrollTop = 0;
-        requestAnimationFrame(() => {
-          preview.scrollTop = 0;
-        });
-      });
-    }
   }
 
   function closeResult() {
@@ -318,15 +340,19 @@
     document.body.classList.remove("modalOpen");
   }
 
-  function startOver() {
+  function resetCaptureState() {
     closeResult();
     stripDataUrl = "";
     stripPreview.src = "";
+    stripPreview.classList.remove("show");
+    animPreview.classList.remove("show");
+    animPreview.removeAttribute("src");
     emailInput.value = "";
-    setChip(stream ? "ok" : "warn", stream ? "Camera ready" : "Tap Begin");
+    setChip(stream ? "ok" : "warn", stream ? "Camera ready" : "Ready");
+    showPrompt("Press START when ready", 1200);
   }
 
-  // ✅ FIX: behave like “Save Image” on iPhone/iPad (opens image so user can save)
+  // iOS-friendly download
   function downloadStrip() {
     if (!stripDataUrl) return;
 
@@ -345,7 +371,6 @@
       }
     }
 
-    // fallback download
     const a = document.createElement("a");
     a.href = stripDataUrl;
     a.download = filename;
@@ -375,9 +400,8 @@
       await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: payload
+        body: payload,
       });
-
       setChip("ok", "Email sent");
       alert("Sent! Check your email.");
     } catch (e) {
@@ -389,14 +413,20 @@
     }
   }
 
+  // ---------- CAPTURE ----------
   async function startSession() {
     if (busy) return;
     busy = true;
 
     try {
       if (!stream) {
-        alert("Tap BEGIN first.");
-        busy = false;
+        setChip("warn", "Starting camera…");
+        const ok = await ensureCamera();
+        if (!ok) return;
+      }
+
+      if (selectedMode !== MODES.PHOTO) {
+        alert("GIF / Boomerang capture not wired yet in this build.");
         return;
       }
 
@@ -425,7 +455,7 @@
 
       setChip("warn", "Building strip…");
       const strip = await buildPhotoStrip(shots);
-      openResult(strip);
+      openResultPhoto(strip);
 
       setChip("ok", "Done");
     } catch (e) {
@@ -439,32 +469,79 @@
     }
   }
 
-  if (toggleFramesBtn && mobileFramesWrap) {
-    toggleFramesBtn.addEventListener("click", () => {
-      const open = mobileFramesWrap.classList.toggle("open");
-      toggleFramesBtn.textContent = open ? "HIDE" : "SHOW";
-    });
+  // ---------- FLOW (MODE -> TEMPLATE -> INSTRUCTIONS -> CAPTURE) ----------
+  function selectMode(mode) {
+    selectedMode = mode;
+
+    [modePhotoBtn, modeGifBtn, modeBoomBtn].forEach((b) => b.classList.remove("selected"));
+    if (mode === MODES.PHOTO) modePhotoBtn.classList.add("selected");
+    if (mode === MODES.GIF) modeGifBtn.classList.add("selected");
+    if (mode === MODES.BOOM) modeBoomBtn.classList.add("selected");
+
+    modeContinueBtn.disabled = false;
+    setChip("warn", "Mode selected");
   }
 
-  beginBtn.addEventListener("click", async () => {
+  function updateInstructionsCopy() {
+    if (selectedMode === MODES.PHOTO) instructionsSub.textContent = "You’ll take 3 photos automatically.";
+    else if (selectedMode === MODES.GIF) instructionsSub.textContent = "You’ll capture a short animated square.";
+    else if (selectedMode === MODES.BOOM) instructionsSub.textContent = "You’ll capture a boomerang (forward + reverse).";
+    else instructionsSub.textContent = "Choose a mode first.";
+  }
+
+  // ---------- EVENTS ----------
+  modePhotoBtn.addEventListener("click", () => selectMode(MODES.PHOTO));
+  modeGifBtn.addEventListener("click", () => selectMode(MODES.GIF));
+  modeBoomBtn.addEventListener("click", () => selectMode(MODES.BOOM));
+
+  modeContinueBtn.addEventListener("click", () => {
+    if (!selectedMode) return;
+    setScreen(screenTemplate);
+    setChip("warn", "Choose a template");
+  });
+
+  templateBackBtn.addEventListener("click", () => {
+    setScreen(screenMode);
+    setChip("warn", "Choose a mode");
+  });
+
+  templateContinueBtn.addEventListener("click", () => {
+    updateInstructionsCopy();
+    setScreen(screenInstructions);
+    setChip("warn", "Read instructions");
+  });
+
+  instructionsBackBtn.addEventListener("click", () => {
+    setScreen(screenTemplate);
+    setChip("warn", "Choose a template");
+  });
+
+  beginCaptureBtn.addEventListener("click", async () => {
+    setScreen(screenCapture);
+    setChip("warn", "Starting camera…");
     const ok = await ensureCamera();
     if (!ok) return;
-    home.style.display = "none";
-    showPrompt("Choose a frame, then press Start", 1200);
+    showPrompt("Press START when ready", 1200);
   });
 
   startBtn.addEventListener("click", startSession);
-  resetBtn.addEventListener("click", startOver);
   startBtnMobile.addEventListener("click", startSession);
-  resetBtnMobile.addEventListener("click", startOver);
+
+  resetBtn.addEventListener("click", resetCaptureState);
+  resetBtnMobile.addEventListener("click", resetCaptureState);
 
   downloadBtn.addEventListener("click", downloadStrip);
   emailBtn.addEventListener("click", emailStrip);
-  startOverBtn.addEventListener("click", startOver);
+  startOverBtn.addEventListener("click", resetCaptureState);
 
-  buildFramePickerDesktop();
-  buildFramePickerMobile();
-  setFrame(0);
+  // ---------- INIT ----------
+  buildFramePicker();
+  frameOverlay.src = FRAMES[0].src;
+
+  modeContinueBtn.disabled = true;
+  templateContinueBtn.disabled = true;
+
   setButtonsEnabled(false);
-  setChip("warn", "Tap Begin");
+  setScreen(screenMode);
+  setChip("warn", "Choose a mode");
 })();
