@@ -5,14 +5,11 @@
   --line:rgba(255,255,255,.10);
   --text:#f5f6ff;
   --muted:rgba(245,246,255,.72);
-
-  --accent:#7c2ae8;       /* photobooth purple */
-  --accent2:#ff2d7d;      /* neon pink */
+  --maroon:#6b1020;
+  --maroon2:#8a1a2d;
   --good:#22c55e;
   --warn:#f59e0b;
   --bad:#ef4444;
-
-  --mobilebar-h: 168px;   /* tuned so templates + Start fit without scroll */
 }
 
 *{ box-sizing:border-box; }
@@ -32,7 +29,6 @@ body{
   grid-template-columns: 360px 1fr;
 }
 
-/* ---------- SIDEBAR (DESKTOP) ---------- */
 .sidebar{
   background: linear-gradient(180deg, rgba(15,16,22,.94), rgba(9,10,14,.94));
   border-right:1px solid var(--line);
@@ -46,14 +42,16 @@ body{
   align-items:center;
   margin-bottom:14px;
 }
+
 .brandMark{
   width:44px; height:44px;
   border-radius:12px;
-  background: linear-gradient(135deg, var(--accent2), var(--accent));
+  background: linear-gradient(135deg, var(--maroon), #1b1b1f);
   display:flex; align-items:center; justify-content:center;
   font-weight:900;
   box-shadow: 0 12px 30px rgba(0,0,0,.5);
 }
+
 .brandTitle{ font-weight:900; letter-spacing:.4px; }
 .brandSub{ margin-top:2px; font-size:12px; color:var(--muted); }
 
@@ -83,9 +81,10 @@ body{
 }
 .frameCard:active{ transform:scale(.99); }
 .frameCard.selected{
-  border-color: rgba(255,45,125,.95);
-  box-shadow: 0 0 0 2px rgba(255,45,125,.25) inset;
+  border-color: rgba(107,16,32,.95);
+  box-shadow: 0 0 0 2px rgba(107,16,32,.30) inset;
 }
+
 .frameThumb{
   width:100%;
   aspect-ratio: 3/4;
@@ -107,7 +106,6 @@ body{
 }
 .helpTitle{ font-weight:900; color:var(--text); margin-bottom:6px; }
 
-/* ---------- MAIN ---------- */
 .main{
   display:flex;
   flex-direction:column;
@@ -209,7 +207,7 @@ video{
 .home{
   position:absolute; inset:0;
   display:flex; align-items:center; justify-content:center;
-  background: radial-gradient(900px 500px at 50% 20%, rgba(124,42,232,.25), rgba(0,0,0,.88));
+  background: radial-gradient(900px 500px at 50% 20%, rgba(107,16,32,.25), rgba(0,0,0,.88));
   backdrop-filter: blur(10px);
   z-index:9;
 }
@@ -251,8 +249,8 @@ video{
 
 .btn.primary{
   color:#fff;
-  background: linear-gradient(135deg, var(--accent2), var(--accent));
-  box-shadow: 0 14px 30px rgba(124,42,232,.18);
+  background: linear-gradient(180deg, var(--maroon2), var(--maroon));
+  box-shadow: 0 14px 30px rgba(107,16,32,.25);
 }
 .btn.secondary{
   background: rgba(255,255,255,.06);
@@ -260,7 +258,6 @@ video{
   color: var(--text);
   min-width:140px;
 }
-
 .btn.tiny{
   min-width:auto;
   padding:10px 12px;
@@ -268,7 +265,7 @@ video{
   font-size:13px;
 }
 
-/* ---------- RESULT MODAL (DESKTOP) ---------- */
+/* RESULT MODAL */
 .modal{
   position:absolute; inset:0;
   display:none;
@@ -280,9 +277,7 @@ video{
   z-index:200;
 }
 
-body.modalOpen .mobileBar{
-  display:none !important;
-}
+body.modalOpen .mobileBar{ display:none !important; }
 
 .modalCard{
   width:min(1040px, 96vw);
@@ -307,7 +302,6 @@ body.modalOpen .mobileBar{
 .preview img{
   width:min(520px, 92%);
   height:auto;
-  object-fit:contain;
   border-radius:14px;
   border:1px solid rgba(255,255,255,.12);
   background:#000;
@@ -340,40 +334,36 @@ body.modalOpen .mobileBar{
 }
 .tinyNote{ margin-top:10px; font-size:12px; color:var(--muted); line-height:1.35; }
 
-/* MOBILE BAR hidden on desktop */
+/* MOBILE BAR (hidden on desktop) */
 .mobileBar{ display:none; }
 
 /* ---------- MOBILE / SMALL SCREENS ---------- */
 @media (max-width: 980px){
-  /* Use dynamic viewport height to reduce Safari “hidden bottom button” issues */
-  body{ height:100dvh; }
   .app{ grid-template-columns:1fr; }
   .sidebar{ display:none; }
-
   .controlsDesktop{ display:none; }
 
-  /* Stage reserves EXACT space for mobile bar (no overlapping / no scroll trap) */
+  /* Use dynamic viewport units where supported */
   .stage{
     padding:10px;
-    padding-bottom: calc(var(--mobilebar-h) + env(safe-area-inset-bottom) + 10px);
+    padding-bottom: 170px;
   }
 
   .booth{
     width: calc(100vw - 20px);
-    height: calc(100dvh - 64px - var(--mobilebar-h) - env(safe-area-inset-bottom) - 20px);
+    height: calc(100dvh - 64px - 170px - 20px); /* topbar + mobile bar + padding */
     border-radius:18px;
   }
 
-  /* Bottom bar */
+  /* Mobile bottom bar */
   .mobileBar{
     display:block;
     position:fixed;
     left:0; right:0; bottom:0;
-    height: calc(var(--mobilebar-h) + env(safe-area-inset-bottom));
     background: rgba(10,10,14,.92);
     border-top:1px solid rgba(255,255,255,.10);
     backdrop-filter: blur(12px);
-    padding:10px 10px calc(12px + env(safe-area-inset-bottom));
+    padding:8px 10px 10px;
     z-index:50;
   }
 
@@ -387,16 +377,12 @@ body.modalOpen .mobileBar{
   .mobileFramesTitle{
     font-weight:900;
     letter-spacing:.3px;
-    color:rgba(245,246,255,.90);
+    color:rgba(245,246,255,.85);
   }
 
-  .mobileFramesWrap{
-    display:none;
-    margin-bottom:10px;
-  }
+  .mobileFramesWrap{ display:none; margin-bottom:10px; }
   .mobileFramesWrap.open{ display:block; }
 
-  /* IMPORTANT: keep row compact so templates don’t push Start off-screen */
   .frameRow{
     display:flex;
     gap:10px;
@@ -407,7 +393,7 @@ body.modalOpen .mobileBar{
 
   .framePill{
     flex:0 0 auto;
-    width:108px;                /* smaller than before */
+    width:104px;
     border-radius:14px;
     border:1px solid rgba(255,255,255,.12);
     background: rgba(255,255,255,.05);
@@ -415,18 +401,18 @@ body.modalOpen .mobileBar{
     cursor:pointer;
   }
   .framePill.selected{
-    border-color: rgba(255,45,125,.95);
-    box-shadow: 0 0 0 2px rgba(255,45,125,.25) inset;
+    border-color: rgba(107,16,32,.95);
+    box-shadow: 0 0 0 2px rgba(107,16,32,.30) inset;
   }
   .framePill img{
-    width:108px;
-    height:126px;              /* smaller thumbnail */
+    width:104px;
+    height:118px;
     object-fit:cover;
     display:block;
   }
   .framePill .name{
-    padding:7px 9px;
-    font-size:12px;
+    padding:6px 8px;
+    font-size:11px;
     font-weight:900;
     white-space:nowrap;
     overflow:hidden;
@@ -441,92 +427,50 @@ body.modalOpen .mobileBar{
   .mobileControls .btn{
     width:48%;
     min-width:0;
-    padding:14px 10px;
+    padding:12px 10px;
+    font-size:15px;
   }
 
-  /* ---------- MOBILE RESULT MODAL: fit screen without nested scroll confusion ---------- */
+  /* ---------- MOBILE RESULT MODAL: single scroll, strip shrinks ---------- */
   .modal{
     align-items:flex-start;
-    justify-content:center;
+    overflow:auto;
+    -webkit-overflow-scrolling: touch;
     padding: 12px 10px calc(12px + env(safe-area-inset-bottom));
-    overflow:hidden; /* no page scroll bar */
   }
 
   .modalCard{
-    width: 96vw;
-    height: calc(100dvh - 24px - env(safe-area-inset-bottom));
+    width:96vw;
     max-height:none;
-    overflow:hidden;
+    overflow:visible;
     display:flex;
     flex-direction:column;
     border-radius:18px;
   }
 
   .preview{
-    overflow:hidden;
-    padding:12px;
     border-right:none;
     border-bottom: 1px solid rgba(255,255,255,.08);
-    display:flex;
+    overflow:visible;
+    padding:12px;
     justify-content:center;
-    align-items:center;
-    flex: 0 0 auto;
   }
 
-  /* Key: image shrinks so the whole panel fits with no scroll */
   .preview img{
     width:auto;
-    max-width: 92vw;
+    max-width:90vw;
     height:auto;
-    max-height: 34dvh;
+    max-height:30dvh; /* keeps buttons visible without needing scroll */
     object-fit:contain;
   }
 
   .panel{
-    overflow:hidden;
-    padding: 12px;
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-    min-height:0;
+    overflow:visible;
+    padding: 10px 12px calc(12px + env(safe-area-inset-bottom));
   }
-
-  .panelTitle{ margin:0; }
-  .panelSub{ margin:0 0 6px; }
 
   .panel .btn{
     width:100%;
     min-width:0;
-  }
-
-  .divider{ margin:10px 0; }
-  .tinyNote{ margin-top:6px; }
-
-  body.modalOpen .mobileBar{ display:none !important; }
-}
-/* ===== PATCH: Mobile template screen fits without scrolling ===== */
-@media (max-width: 980px){
-  /* Use dynamic viewport units on iOS Safari */
-  .stage{
-    padding-bottom: 170px; /* was 200px; gives booth more room */
-  }
-
-  .booth{
-    height: calc(100dvh - 64px - 170px - 20px);
-  }
-
-  .mobileBar{
-    padding: 8px 10px 10px;
-  }
-
-  /* Make template thumbnails smaller so the bar doesn’t push content off-screen */
-  .framePill{ width: 104px; }
-  .framePill img{ width: 104px; height: 118px; }
-  .framePill .name{ padding: 6px 8px; font-size: 11px; }
-
-  /* Make buttons slightly shorter (still finger friendly) */
-  .mobileControls .btn{
-    padding: 12px 10px;
-    font-size: 15px;
   }
 }
