@@ -67,7 +67,10 @@ body{
   padding:14px;
   background: rgba(255,255,255,.03);
 }
-.railCardTitle{ font-weight:900; font-size:12px; letter-spacing:.5px; text-transform:uppercase; color:rgba(246,247,255,.85); margin-bottom:8px; }
+.railCardTitle{
+  font-weight:900; font-size:12px; letter-spacing:.5px; text-transform:uppercase;
+  color:rgba(246,247,255,.85); margin-bottom:8px;
+}
 .railCardText{ font-size:12px; color:var(--muted); line-height:1.4; margin:6px 0; }
 .railFooter{ margin-top:18px; font-size:12px; color:rgba(246,247,255,.55); }
 
@@ -356,7 +359,7 @@ video{
 .preview img.show,
 .preview video.show{ display:block; }
 
-.panel{ padding:16px; overflow:auto; }
+.panel{ padding:16px; overflow:hidden; }
 .panelTitle{ font-size:18px; font-weight:900; margin-bottom:6px; }
 .panelSub{ font-size:12px; color:var(--muted); margin-bottom:12px; }
 
@@ -384,35 +387,19 @@ video{
 }
 .tinyNote{ margin-top:10px; font-size:12px; color:var(--muted); line-height:1.35; }
 
-.shareRow{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-}
-.shareRow .btn{
-  flex:1 1 140px;
-  min-width:0;
-}
-.shareHint{
-  margin-top:8px;
-  font-size:12px;
-  color:rgba(246,247,255,.65);
-  line-height:1.35;
-}
-
 /* mobile bar */
 .mobileBar{ display:none; }
 
-/* responsive */
+/* ---------- MOBILE: NO SCROLLING SCREENS ---------- */
 @media (max-width: 980px){
   .app{ grid-template-columns:1fr; }
   .rail{ display:none; }
 
-  /* KEY FIX: allow the TEMPLATE screen to fit without cutting buttons */
+  /* keep everything inside viewport */
   .stage{
-    padding:12px;
-    min-height:0;
-    padding-bottom: calc(110px + env(safe-area-inset-bottom));
+    padding:10px;
+    /* reserve a SMALL bottom bar only */
+    padding-bottom: calc(86px + env(safe-area-inset-bottom));
   }
 
   .screen{
@@ -420,49 +407,67 @@ video{
     justify-content:stretch;
   }
 
+  /* IMPORTANT: fixed-height card so it never scrolls */
   .screenCard{
     width: 100%;
-    height: 100%;
-    max-height: 100%;
+    height: calc(100vh - 64px - (86px + env(safe-area-inset-bottom)) - 20px);
+    max-height: calc(100vh - 64px - (86px + env(safe-area-inset-bottom)) - 20px);
     display:flex;
     flex-direction:column;
     border-radius:18px;
-    padding:14px;
-    overflow:hidden; /* prevent outer scroll */
+    padding:12px;
+    overflow:hidden; /* NO internal scroll */
   }
 
-  .screenHeader{ flex:0 0 auto; }
+  /* shrink typography to fit */
+  .screenTitle{ font-size:20px; }
+  .screenSub{ font-size:12px; }
 
-  /* Make the content area scroll ONLY if needed */
-  .frameGrid,
-  .steps,
+  .screenHeader{ margin-bottom:10px; }
+
+  /* content areas must fit without scrolling */
   .modeGrid{
-    flex: 1 1 auto;
-    min-height:0;
-    overflow:auto;
-    -webkit-overflow-scrolling: touch;
-    padding-bottom: 10px;
+    grid-template-columns: 1fr;
+    gap:10px;
+    margin-top:10px;
   }
+  .modeTile{
+    min-height:72px;
+    padding:12px;
+  }
+  .modeName{ font-size:16px; }
+  .modeDesc{ font-size:12px; }
 
-  .modeGrid{ grid-template-columns: 1fr; }
-  .frameGrid{ grid-template-columns: repeat(2, 1fr); }
+  .frameGrid{
+    grid-template-columns: repeat(2, 1fr);
+    gap:10px;
+    margin-top:8px;
+  }
+  .frameCard{ padding:8px; border-radius:16px; }
+  .frameThumb{ border-radius:12px; }
+  .frameName{ margin-top:6px; font-size:12px; }
 
-  /* Buttons always visible at bottom */
+  .steps{ gap:8px; margin-top:8px; }
+  .step{ padding:10px; border-radius:14px; }
+  .stepTxt{ font-size:13px; }
+
+  /* actions always visible */
   .screenActions{
-    flex:0 0 auto;
-    margin-top:12px;
+    margin-top:auto;
     padding-top:10px;
     border-top:1px solid rgba(255,255,255,.08);
   }
+  .screenActions .btn{ width:100%; min-width:0; }
 
+  /* capture booth fits */
   .booth{
     width: 100%;
-    height: calc(100vh - 64px - (110px + env(safe-area-inset-bottom)) - 24px);
+    height: calc(100vh - 64px - (86px + env(safe-area-inset-bottom)) - 20px);
     border-radius:18px;
   }
 
+  /* mobile bar smaller */
   .controlsDesktop{ display:none; }
-
   .mobileBar{
     display:block;
     position:fixed;
@@ -487,7 +492,7 @@ video{
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
-    max-width: 44vw;
+    max-width: 52vw;
   }
   .mobileSub{
     margin-top:2px;
@@ -496,7 +501,7 @@ video{
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
-    max-width: 44vw;
+    max-width: 52vw;
   }
   .mobileBarRight{
     display:flex;
@@ -507,27 +512,39 @@ video{
     padding:12px 14px;
   }
 
-  /* modal on mobile */
+  /* RESULT MODAL: also no scrolling */
   .modal{
-    align-items:flex-start;
-    overflow:auto;
-    -webkit-overflow-scrolling: touch;
-    padding:12px 10px calc(12px + env(safe-area-inset-bottom));
+    padding:10px;
+    overflow:hidden; /* no page scroll */
+    align-items:center;
   }
   .modalCard{
+    width: 96vw;
+    height: calc(100vh - 20px - env(safe-area-inset-bottom));
+    max-height: calc(100vh - 20px - env(safe-area-inset-bottom));
+    display:grid;
+    grid-template-rows: auto 1fr;
     grid-template-columns: 1fr;
-    max-height:none;
-    overflow:visible;
+    overflow:hidden;
+    border-radius:18px;
   }
   .preview{
     border-right:none;
     border-bottom:1px solid rgba(255,255,255,.08);
-    padding:12px;
+    padding:10px;
   }
   .preview img,
   .preview video{
-    max-height: 30vh;
+    max-height: 26vh;   /* shrink strip/video so panel fits */
     max-width: 92vw;
   }
-  .panel{ overflow:visible; }
+  .panel{
+    padding:12px;
+    overflow:hidden; /* no inner scroll */
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .panel .btn{ width:100%; min-width:0; }
+  .divider{ margin:10px 0; }
 }
