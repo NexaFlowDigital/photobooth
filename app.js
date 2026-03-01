@@ -1,72 +1,45 @@
 (() => {
   const CONFIG = window.PHOTOBOOTH_CONFIG || { GAS_POST_URL: "" };
 
-  // Screens
-  const screenMode = document.getElementById("screenMode");
-  const screenTemplate = document.getElementById("screenTemplate");
-  const screenInstructions = document.getElementById("screenInstructions");
-  const screenCapture = document.getElementById("screenCapture");
+  // Elements
+  const video = document.getElementById("video");
+  const frameOverlay = document.getElementById("frameOverlay");
 
-  // Header
-  const topTitleSub = document.getElementById("topTitleSub");
-  const mobileSub = document.getElementById("mobileSub");
-
-  // Status chip
   const chipDot = document.getElementById("chipDot");
   const chipText = document.getElementById("chipText");
-
-  // Mode buttons
-  const modePhotoBtn = document.getElementById("modePhotoBtn");
-  const modeGifBtn = document.getElementById("modeGifBtn");
-  const modeBoomBtn = document.getElementById("modeBoomBtn");
-  const modeContinueBtn = document.getElementById("modeContinueBtn");
-
-  // Template screen buttons
-  const templateBackBtn = document.getElementById("templateBackBtn");
-  const templateContinueBtn = document.getElementById("templateContinueBtn");
-
-  // Instructions screen buttons
-  const instructionsBackBtn = document.getElementById("instructionsBackBtn");
-  const beginCaptureBtn = document.getElementById("beginCaptureBtn");
-  const instructionsSub = document.getElementById("instructionsSub");
-
-  // Capture + UI
-  const framesEl = document.getElementById("frames");
-  const frameOverlay = document.getElementById("frameOverlay");
-  const video = document.getElementById("video");
 
   const flashEl = document.getElementById("flash");
   const countdownEl = document.getElementById("countdown");
   const promptEl = document.getElementById("prompt");
 
-  // Capture controls
   const startBtn = document.getElementById("startBtn");
   const resetBtn = document.getElementById("resetBtn");
   const startBtnMobile = document.getElementById("startBtnMobile");
   const resetBtnMobile = document.getElementById("resetBtnMobile");
 
-  // Result modal
   const modal = document.getElementById("modal");
   const stripPreview = document.getElementById("stripPreview");
-  const animPreview = document.getElementById("animPreview");
   const downloadBtn = document.getElementById("downloadBtn");
   const emailInput = document.getElementById("emailInput");
   const emailBtn = document.getElementById("emailBtn");
   const startOverBtn = document.getElementById("startOverBtn");
-  const resultTitle = document.getElementById("resultTitle");
-  const resultSub = document.getElementById("resultSub");
-  const emailNote = document.getElementById("emailNote");
 
-  // Config
-  const PHOTO_SHOTS = 3;
+  const home = document.getElementById("home");
+  const beginBtn = document.getElementById("beginBtn");
+
+  // Mobile frames (template picker)
+  const framesEl = document.getElementById("frames");
+  const framesMobileEl = document.getElementById("framesMobile");
+  const toggleFramesBtn = document.getElementById("toggleFramesBtn");
+  const mobileFramesWrap = document.getElementById("mobileFramesWrap");
+
+  const boothEl = document.querySelector(".booth");
+
+  // Settings
+  const SHOTS = 3;
   const COUNTDOWN_SECONDS = 3;
 
-  const MODE = {
-    PHOTO: "photo",
-    GIF: "gif",
-    BOOM: "boom"
-  };
-
+  // These are your “templates/frames” (same assets)
   const FRAMES = [
     { name: "Gathering Classic", src: "assets/frames/frame-gathering-classic.png" },
     { name: "Killough Maroon",   src: "assets/frames/frame-killough-maroon.png" },
@@ -74,29 +47,23 @@
     { name: "Texas Star",        src: "assets/frames/frame-texas-star.png" },
   ];
 
-  let selectedMode = null;
   let selectedFrame = 0;
-
   let stream = null;
+  let stripDataUrl = "";
   let busy = false;
 
-  // Results
-  let resultKind = "image";   // "image" | "video"
-  let resultDataUrl = "";     // for image (PNG)
-  let resultBlobUrl = "";     // for video (WEBM)
-  let resultFilename = "";
-
+  // ---------- UI helpers ----------
   function setChip(state, text) {
     chipText.textContent = text;
     chipDot.classList.remove("ok", "warn", "bad");
     chipDot.classList.add(state);
   }
 
-  function showScreen(el) {
-    [screenMode, screenTemplate, screenInstructions, screenCapture].forEach(s => {
-      if (s) s.classList.remove("show");
-    });
-    el.classList.add("show");
+  function setButtonsEnabled(enabled) {
+    if (startBtn) startBtn.disabled = !enabled;
+    if (resetBtn) resetBtn.disabled = !enabled;
+    if (startBtnMobile) startBtnMobile.disabled = !enabled;
+    if (resetBtnMobile) resetBtnMobile.disabled = !enabled;
   }
 
   function sleep(ms) {
@@ -107,6 +74,15 @@
     promptEl.textContent = text;
     promptEl.classList.add("show");
     if (ms > 0) setTimeout(() => promptEl.classList.remove("show"), ms);
+  }
+
+  function showCountdown(n) {
+    countdownEl.style.opacity = 1;
+    countdownEl.textContent = String(n);
+  }
+  function hideCountdown() {
+    countdownEl.style.opacity = 0;
+    countdownEl.textContent = "";
   }
 
   function flashFlicker() {
@@ -128,32 +104,24 @@
     }, 260);
   }
 
-  function showCountdown(n) {
-    countdownEl.style.opacity = 1;
-    countdownEl.textContent = String(n);
-  }
-  function hideCountdown() {
-    countdownEl.style.opacity = 0;
-    countdownEl.textContent = "";
-  }
-
-  function setButtonsEnabled(enabled) {
-    startBtn.disabled = !enabled;
-    resetBtn.disabled = !enabled;
-    startBtnMobile.disabled = !enabled;
-    resetBtnMobile.disabled = !enabled;
-  }
-
-  function loadImage(src) {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => resolve(img);
-      img.onerror = reject;
-      img.src = src;
+  // ---------- Template picker ----------
+  function syncFrameSelectedUI() {
+    [...document.querySelectorAll(".frameCard")].forEach((el, idx) => {
+      el.classList.toggle("selected", idx === selectedFrame);
+    });
+    [...document.querySelectorAll(".framePill")].forEach((el, idx) => {
+      el.classList.toggle("selected", idx === selectedFrame);
     });
   }
 
-  function buildFramePicker() {
+  function setFrame(i) {
+    selectedFrame = i;
+    frameOverlay.src = FRAMES[i].src;
+    syncFrameSelectedUI();
+  }
+
+  function buildFramePickerDesktop() {
+    if (!framesEl) return;
     framesEl.innerHTML = "";
     FRAMES.forEach((f, i) => {
       const card = document.createElement("div");
@@ -176,52 +144,38 @@
     });
   }
 
-  function syncFrameSelectedUI() {
-    [...document.querySelectorAll(".frameCard")].forEach((el, idx) => {
-      el.classList.toggle("selected", idx === selectedFrame);
+  function buildFramePickerMobile() {
+    if (!framesMobileEl) return;
+    framesMobileEl.innerHTML = "";
+    FRAMES.forEach((f, i) => {
+      const pill = document.createElement("div");
+      pill.className = "framePill" + (i === selectedFrame ? " selected" : "");
+      pill.addEventListener("click", () => setFrame(i));
+
+      const img = document.createElement("img");
+      img.src = f.src;
+
+      const name = document.createElement("div");
+      name.className = "name";
+      name.textContent = f.name;
+
+      pill.appendChild(img);
+      pill.appendChild(name);
+      framesMobileEl.appendChild(pill);
     });
   }
 
-  function setFrame(i) {
-    selectedFrame = i;
-    frameOverlay.src = FRAMES[i].src;
-    syncFrameSelectedUI();
-  }
-
-  function setMode(mode) {
-    selectedMode = mode;
-
-    [modePhotoBtn, modeGifBtn, modeBoomBtn].forEach(b => b.classList.remove("selected"));
-    if (mode === MODE.PHOTO) modePhotoBtn.classList.add("selected");
-    if (mode === MODE.GIF) modeGifBtn.classList.add("selected");
-    if (mode === MODE.BOOM) modeBoomBtn.classList.add("selected");
-
-    modeContinueBtn.disabled = false;
-
-    if (mode === MODE.PHOTO) {
-      topTitleSub.textContent = "Photo mode";
-      mobileSub.textContent = "Photo mode";
-      setChip("ok", "Photo selected");
-      instructionsSub.textContent = "You’ll take 3 photos automatically.";
-    } else if (mode === MODE.GIF) {
-      topTitleSub.textContent = "GIF mode";
-      mobileSub.textContent = "GIF mode";
-      setChip("ok", "GIF selected");
-      instructionsSub.textContent = "You’ll capture a short animated square.";
-    } else if (mode === MODE.BOOM) {
-      topTitleSub.textContent = "Boomerang mode";
-      mobileSub.textContent = "Boomerang mode";
-      setChip("ok", "Boomerang selected");
-      instructionsSub.textContent = "You’ll capture forward + reverse motion.";
-    }
-  }
-
+  // ---------- Camera ----------
   async function ensureCamera() {
     if (stream) return true;
 
     try {
       stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
+        video: {
+          facingMode: "user",
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        },
         audio: false
       });
 
@@ -245,40 +199,69 @@
     }
   }
 
-  // Capture mirrored + overlay. square=true center-crops to square.
-  async function captureWithOverlay({ square = false } = {}) {
+  function loadImage(src) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = src;
+    });
+  }
+
+  /**
+   * IMPORTANT FIX:
+   * Capture crops to the SAME aspect ratio as the booth you see on-screen.
+   * This prevents phone portrait camera from producing tall/odd-looking strip photos.
+   */
+  async function captureWithOverlay() {
     if (!video.videoWidth || !video.videoHeight) await sleep(200);
 
     const vw = video.videoWidth;
     const vh = video.videoHeight;
 
-    let w = vw;
-    let h = vh;
+    const targetAspect = (() => {
+      const bw = boothEl?.clientWidth || 4;
+      const bh = boothEl?.clientHeight || 3;
+      return bw / bh;
+    })();
 
+    // Center-crop in SOURCE space to match target aspect
+    const srcAspect = vw / vh;
     let sx = 0, sy = 0, sw = vw, sh = vh;
-    if (square) {
-      const side = Math.min(vw, vh);
-      sw = sh = side;
-      sx = Math.floor((vw - side) / 2);
-      sy = Math.floor((vh - side) / 2);
-      w = h = side;
+
+    if (srcAspect > targetAspect) {
+      // too wide -> crop width
+      sw = Math.round(vh * targetAspect);
+      sx = Math.round((vw - sw) / 2);
+    } else {
+      // too tall -> crop height
+      sh = Math.round(vw / targetAspect);
+      sy = Math.round((vh - sh) / 2);
     }
 
+    // Output size (keeps quality consistent)
+    const outW = 1200;
+    const outH = Math.round(outW / targetAspect);
+
     const canvas = document.createElement("canvas");
-    canvas.width = w;
-    canvas.height = h;
+    canvas.width = outW;
+    canvas.height = outH;
     const ctx = canvas.getContext("2d");
 
+    // Mirror like the preview
     ctx.save();
-    ctx.translate(w, 0);
+    ctx.translate(outW, 0);
     ctx.scale(-1, 1);
-    ctx.drawImage(video, sx, sy, sw, sh, 0, 0, w, h);
+    ctx.drawImage(video, sx, sy, sw, sh, 0, 0, outW, outH);
     ctx.restore();
 
+    // Overlay
     try {
       const overlay = await loadImage(FRAMES[selectedFrame].src);
-      ctx.drawImage(overlay, 0, 0, w, h);
-    } catch (e) {}
+      ctx.drawImage(overlay, 0, 0, outW, outH);
+    } catch (e) {
+      // ignore
+    }
 
     return canvas.toDataURL("image/png", 0.92);
   }
@@ -288,9 +271,11 @@
 
     const stripW = 900;
     const photoW = stripW;
-    const photoH = Math.round(photoW * (loaded[0].height / loaded[0].width));
-    const gap = 20, headerH = 120, footerH = 160;
 
+    // Use the captured image aspect (which now matches booth aspect across devices)
+    const photoH = Math.round(photoW * (loaded[0].height / loaded[0].width));
+
+    const gap = 20, headerH = 120, footerH = 160;
     const totalH = headerH + (photoH * loaded.length) + (gap * (loaded.length - 1)) + footerH;
 
     const c = document.createElement("canvas");
@@ -332,118 +317,66 @@
     return c.toDataURL("image/png", 0.92);
   }
 
-  function openResultImage({ dataUrl, filename, title, sub }) {
-    resultKind = "image";
-    resultDataUrl = dataUrl;
-    if (resultBlobUrl) URL.revokeObjectURL(resultBlobUrl);
-    resultBlobUrl = "";
-    resultFilename = filename;
-
+  // ---------- Result modal ----------
+  function openResult(dataUrl) {
+    stripDataUrl = dataUrl;
     stripPreview.src = dataUrl;
-    stripPreview.classList.add("show");
-
-    animPreview.classList.remove("show");
-    animPreview.removeAttribute("src");
-    animPreview.load();
-
-    resultTitle.textContent = title;
-    resultSub.textContent = sub;
-
-    downloadBtn.textContent = "SAVE IMAGE";
-    emailNote.textContent = "Tip: on iPhone/iPad you can save from the browser if needed.";
 
     modal.style.display = "flex";
-  }
+    document.body.classList.add("modalOpen");
 
-  function openResultVideo({ blobUrl, posterDataUrl, filename, title, sub }) {
-    resultKind = "video";
-    resultDataUrl = posterDataUrl || "";
-    if (resultBlobUrl) URL.revokeObjectURL(resultBlobUrl);
-    resultBlobUrl = blobUrl;
-    resultFilename = filename;
-
-    stripPreview.classList.remove("show");
-    stripPreview.removeAttribute("src");
-
-    animPreview.src = blobUrl;
-    animPreview.classList.add("show");
-    animPreview.play().catch(() => {});
-
-    resultTitle.textContent = title;
-    resultSub.textContent = sub;
-
-    downloadBtn.textContent = "SAVE VIDEO";
-    emailNote.textContent = "Email sends a still image. Use SAVE for the animation.";
-
-    modal.style.display = "flex";
+    // ensure preview starts at top on desktop if any scroll exists
+    const preview = document.querySelector(".preview");
+    if (preview) {
+      preview.scrollTop = 0;
+      requestAnimationFrame(() => (preview.scrollTop = 0));
+    }
   }
 
   function closeResult() {
     modal.style.display = "none";
+    document.body.classList.remove("modalOpen");
   }
 
   function startOver() {
     closeResult();
-    resultKind = "image";
-    resultDataUrl = "";
-    if (resultBlobUrl) URL.revokeObjectURL(resultBlobUrl);
-    resultBlobUrl = "";
-    resultFilename = "";
+    stripDataUrl = "";
+    stripPreview.src = "";
     emailInput.value = "";
-    setChip(stream ? "ok" : "warn", stream ? "Camera ready" : "Ready");
+    setChip(stream ? "ok" : "warn", stream ? "Camera ready" : "Tap Begin");
   }
 
-  async function getResultFile() {
-    if (resultKind === "image") {
-      if (!resultDataUrl) return null;
-      const blob = await (await fetch(resultDataUrl)).blob();
-      const name = resultFilename || `GOS_PhotoStrip_${new Date().toISOString().replace(/[:.]/g, "-")}.png`;
-      return new File([blob], name, { type: blob.type || "image/png" });
-    }
+  // Change: “Download” behaves like normal save/share sheet on iOS
+  function saveStrip() {
+    if (!stripDataUrl) return;
 
-    if (resultKind === "video") {
-      if (!resultBlobUrl) return null;
-      const blob = await (await fetch(resultBlobUrl)).blob();
-      const name = resultFilename || `GOS_Animation_${new Date().toISOString().replace(/[:.]/g, "-")}.webm`;
-      return new File([blob], name, { type: blob.type || "video/webm" });
-    }
+    const filename = `GOS_PhotoStrip_${new Date().toISOString().replace(/[:.]/g, "-")}.png`;
 
-    return null;
-  }
-
-  // SAVE button only
-  async function saveResult() {
-    // Prefer OS save sheet when possible (best for iPhone/iPad)
-    try {
-      const file = await getResultFile();
-      if (file && navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
-        await navigator.share({ files: [file] });
-        return;
+    // iOS Safari: opening the image lets user "Save Image" easily
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    if (isIOS) {
+      const w = window.open();
+      if (w) {
+        w.document.write(`<title>${filename}</title>`);
+        w.document.write(`<img src="${stripDataUrl}" style="max-width:100%;height:auto;display:block;margin:0 auto;" />`);
+      } else {
+        // fallback: normal download
+        const a = document.createElement("a");
+        a.href = stripDataUrl;
+        a.download = filename;
+        a.click();
       }
-    } catch (e) {
-      // fallback below
-    }
-
-    // fallback: download
-    if (resultKind === "image") {
-      if (!resultDataUrl) return;
-      const a = document.createElement("a");
-      a.href = resultDataUrl;
-      a.download = resultFilename || `GOS_PhotoStrip_${new Date().toISOString().replace(/[:.]/g, "-")}.png`;
-      a.click();
       return;
     }
 
-    if (resultKind === "video") {
-      if (!resultBlobUrl) return;
-      const a = document.createElement("a");
-      a.href = resultBlobUrl;
-      a.download = resultFilename || `GOS_Animation_${new Date().toISOString().replace(/[:.]/g, "-")}.webm`;
-      a.click();
-    }
+    // Desktop / others: download
+    const a = document.createElement("a");
+    a.href = stripDataUrl;
+    a.download = filename;
+    a.click();
   }
 
-  async function emailResult() {
+  async function emailStrip() {
     const url = (CONFIG.GAS_POST_URL || "").trim();
     if (!url) {
       alert("Email is not configured. Add your Apps Script URL in config.js.");
@@ -455,19 +388,15 @@
       alert("Enter your email.");
       return;
     }
-
-    // For video mode, email still image (poster)
-    if (!resultDataUrl) {
-      alert("No image available to email. Use SAVE.");
-      return;
-    }
+    if (!stripDataUrl) return;
 
     emailBtn.disabled = true;
     setChip("warn", "Sending email…");
 
-    const payload = JSON.stringify({ email, pngDataUrl: resultDataUrl });
+    const payload = JSON.stringify({ email, pngDataUrl: stripDataUrl });
 
     try {
+      // text/plain avoids CORS preflight issues on iOS Safari
       await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -485,154 +414,44 @@
     }
   }
 
-  function supportsMediaRecorder() {
-    return typeof MediaRecorder !== "undefined" && typeof HTMLCanvasElement !== "undefined";
-  }
-
-  async function recordCanvasAnimation(framesDataUrls, { boomerang = false, fps = 12 } = {}) {
-    const imgs = await Promise.all(framesDataUrls.map(loadImage));
-    const size = 720;
-
-    const canvas = document.createElement("canvas");
-    canvas.width = size;
-    canvas.height = size;
-    const ctx = canvas.getContext("2d");
-
-    let seq = imgs.slice();
-    if (boomerang) seq = imgs.concat(imgs.slice().reverse());
-
-    let idx = 0;
-    const draw = () => {
-      ctx.fillStyle = "#000";
-      ctx.fillRect(0, 0, size, size);
-
-      const img = seq[idx];
-      const scale = Math.max(size / img.width, size / img.height);
-      const dw = img.width * scale;
-      const dh = img.height * scale;
-      const dx = (size - dw) / 2;
-      const dy = (size - dh) / 2;
-      ctx.drawImage(img, dx, dy, dw, dh);
-
-      idx = (idx + 1) % seq.length;
-    };
-
-    const stream = canvas.captureStream(fps);
-
-    const preferred = [
-      "video/webm;codecs=vp9",
-      "video/webm;codecs=vp8",
-      "video/webm"
-    ];
-    const mimeType = preferred.find(t => MediaRecorder.isTypeSupported(t)) || "";
-
-    const rec = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
-    const chunks = [];
-    rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
-
-    const intervalMs = Math.round(1000 / fps);
-    const timer = setInterval(draw, intervalMs);
-    draw();
-
-    rec.start();
-
-    const durationMs = Math.max(1800, Math.min(3200, seq.length * intervalMs));
-    await sleep(durationMs);
-
-    rec.stop();
-    clearInterval(timer);
-
-    await new Promise(resolve => rec.onstop = resolve);
-
-    const blob = new Blob(chunks, { type: chunks[0]?.type || "video/webm" });
-    return URL.createObjectURL(blob);
-  }
-
+  // ---------- Session ----------
   async function startSession() {
     if (busy) return;
     busy = true;
 
     try {
       if (!stream) {
-        setChip("bad", "Camera not ready");
-        alert("Camera not ready. Go back and press START NOW.");
-        return;
-      }
-
-      if (selectedMode === MODE.PHOTO) {
-        setChip("warn", "Get ready…");
-        showPrompt("Get ready for 3 photos", 1000);
-        await sleep(750);
-
-        setChip("warn", "Capturing…");
-        startBtn.disabled = true;
-        startBtnMobile.disabled = true;
-
-        const shots = [];
-        for (let s = 1; s <= PHOTO_SHOTS; s++) {
-          showPrompt(`Photo ${s} of ${PHOTO_SHOTS}`, 800);
-          for (let t = COUNTDOWN_SECONDS; t >= 1; t--) {
-            showCountdown(t);
-            await sleep(850);
-          }
-          hideCountdown();
-          flashFlicker();
-          shots.push(await captureWithOverlay({ square: false }));
-          await sleep(420);
-        }
-
-        setChip("warn", "Building strip…");
-        const strip = await buildPhotoStrip(shots);
-
-        openResultImage({
-          dataUrl: strip,
-          filename: `GOS_PhotoStrip_${new Date().toISOString().replace(/[:.]/g, "-")}.png`,
-          title: "Your Photo Strip",
-          sub: "Save or email it to yourself."
-        });
-
-        setChip("ok", "Done");
-        return;
-      }
-
-      if (!supportsMediaRecorder()) {
-        alert("Animated capture is not supported on this browser. Switching to Photo mode.");
-        setMode(MODE.PHOTO);
+        alert("Tap BEGIN first.");
+        busy = false;
         return;
       }
 
       setChip("warn", "Get ready…");
-      showPrompt(selectedMode === MODE.GIF ? "Capturing GIF…" : "Capturing Boomerang…", 1000);
-      await sleep(650);
+      showPrompt("Get ready for 3 photos", 1100);
+      await sleep(850);
 
-      startBtn.disabled = true;
-      startBtnMobile.disabled = true;
+      setChip("warn", "Capturing…");
+      if (startBtn) startBtn.disabled = true;
+      if (startBtnMobile) startBtnMobile.disabled = true;
 
-      const frameCount = 14;
-      const frames = [];
-      for (let i = 0; i < frameCount; i++) {
-        if (i === 0 || i === frameCount - 1) flashFlicker();
-        frames.push(await captureWithOverlay({ square: true }));
-        await sleep(90);
+      const shots = [];
+      for (let s = 1; s <= SHOTS; s++) {
+        showPrompt(`Photo ${s} of ${SHOTS} • Say cheese`, 950);
+
+        for (let t = COUNTDOWN_SECONDS; t >= 1; t--) {
+          showCountdown(t);
+          await sleep(900);
+        }
+        hideCountdown();
+
+        flashFlicker();
+        shots.push(await captureWithOverlay());
+        await sleep(450);
       }
 
-      setChip("warn", "Building animation…");
-      const blobUrl = await recordCanvasAnimation(frames, {
-        boomerang: selectedMode === MODE.BOOM,
-        fps: 12
-      });
-
-      const poster = frames[0];
-
-      openResultVideo({
-        blobUrl,
-        posterDataUrl: poster,
-        filename: selectedMode === MODE.GIF
-          ? `GOS_GIF_${new Date().toISOString().replace(/[:.]/g, "-")}.webm`
-          : `GOS_Boomerang_${new Date().toISOString().replace(/[:.]/g, "-")}.webm`,
-        title: selectedMode === MODE.GIF ? "Your GIF" : "Your Boomerang",
-        sub: "Save it or email a still image."
-      });
+      setChip("warn", "Building strip…");
+      const strip = await buildPhotoStrip(shots);
+      openResult(strip);
 
       setChip("ok", "Done");
     } catch (e) {
@@ -640,77 +459,40 @@
       setChip("bad", "Capture error");
       alert("Capture error: " + (e?.message || e));
     } finally {
-      startBtn.disabled = false;
-      startBtnMobile.disabled = false;
+      if (startBtn) startBtn.disabled = false;
+      if (startBtnMobile) startBtnMobile.disabled = false;
       busy = false;
     }
   }
 
-  // Navigation
-  function goMode() {
-    showScreen(screenMode);
-    topTitleSub.textContent = "Choose a mode";
-    mobileSub.textContent = "Photobooth";
-    setChip("warn", "Ready");
+  // ---------- Events ----------
+  if (toggleFramesBtn && mobileFramesWrap) {
+    toggleFramesBtn.addEventListener("click", () => {
+      const open = mobileFramesWrap.classList.toggle("open");
+      toggleFramesBtn.textContent = open ? "HIDE" : "SHOW";
+    });
   }
-  function goTemplate() {
-    showScreen(screenTemplate);
-    topTitleSub.textContent = "Choose a template";
-    mobileSub.textContent = "Choose template";
-    setChip("warn", "Pick a template");
-  }
-  function goInstructions() {
-    showScreen(screenInstructions);
-    topTitleSub.textContent = "Instructions";
-    mobileSub.textContent = "Instructions";
-    setChip("warn", "Almost ready");
-  }
-  async function goCapture() {
-    showScreen(screenCapture);
-    topTitleSub.textContent = "Capture";
-    mobileSub.textContent = "Capture";
-    setChip("warn", "Starting camera…");
 
+  beginBtn.addEventListener("click", async () => {
     const ok = await ensureCamera();
     if (!ok) return;
-
-    setChip("ok", "Camera ready");
-    showPrompt("Press START when ready", 1000);
-  }
-
-  // Mode selection
-  modePhotoBtn.addEventListener("click", () => setMode(MODE.PHOTO));
-  modeGifBtn.addEventListener("click", () => setMode(MODE.GIF));
-  modeBoomBtn.addEventListener("click", () => setMode(MODE.BOOM));
-
-  modeContinueBtn.addEventListener("click", () => {
-    if (!selectedMode) return;
-    goTemplate();
+    home.style.display = "none";
+    showPrompt("Choose a template, then press Start", 1200);
   });
 
-  // template nav
-  templateBackBtn.addEventListener("click", goMode);
-  templateContinueBtn.addEventListener("click", goInstructions);
+  if (startBtn) startBtn.addEventListener("click", startSession);
+  if (resetBtn) resetBtn.addEventListener("click", startOver);
+  if (startBtnMobile) startBtnMobile.addEventListener("click", startSession);
+  if (resetBtnMobile) resetBtnMobile.addEventListener("click", startOver);
 
-  // instructions nav
-  instructionsBackBtn.addEventListener("click", goTemplate);
-  beginCaptureBtn.addEventListener("click", goCapture);
+  downloadBtn.addEventListener("click", saveStrip);
+  emailBtn.addEventListener("click", emailStrip);
+  startOverBtn.addEventListener("click", startOver);
 
-  // capture buttons
-  startBtn.addEventListener("click", startSession);
-  resetBtn.addEventListener("click", () => { startOver(); goTemplate(); });
-
-  startBtnMobile.addEventListener("click", startSession);
-  resetBtnMobile.addEventListener("click", () => { startOver(); goTemplate(); });
-
-  // result buttons
-  downloadBtn.addEventListener("click", saveResult);
-  emailBtn.addEventListener("click", emailResult);
-  startOverBtn.addEventListener("click", () => { startOver(); goTemplate(); });
-
-  // init
-  buildFramePicker();
+  // Init
+  buildFramePickerDesktop();
+  buildFramePickerMobile();
   setFrame(0);
   setButtonsEnabled(false);
-  goMode();
+  setChip("warn", "Tap Begin");
 })();
