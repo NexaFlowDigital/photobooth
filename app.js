@@ -1,19 +1,22 @@
 (() => {
   const CONFIG = window.PHOTOBOOTH_CONFIG || { GAS_POST_URL: "" };
 
-  // Elements
-  const video = document.getElementById("video");
-  const frameOverlay = document.getElementById("frameOverlay");
+  const framesEl = document.getElementById("frames");
+  const framesMobileEl = document.getElementById("framesMobile");
+  const toggleFramesBtn = document.getElementById("toggleFramesBtn");
+  const mobileFramesWrap = document.getElementById("mobileFramesWrap");
 
+  const frameOverlay = document.getElementById("frameOverlay");
+  const video = document.getElementById("video");
   const chipDot = document.getElementById("chipDot");
   const chipText = document.getElementById("chipText");
-
   const flashEl = document.getElementById("flash");
   const countdownEl = document.getElementById("countdown");
   const promptEl = document.getElementById("prompt");
 
   const startBtn = document.getElementById("startBtn");
   const resetBtn = document.getElementById("resetBtn");
+
   const startBtnMobile = document.getElementById("startBtnMobile");
   const resetBtnMobile = document.getElementById("resetBtnMobile");
 
@@ -27,19 +30,11 @@
   const home = document.getElementById("home");
   const beginBtn = document.getElementById("beginBtn");
 
-  // Mobile frames (template picker)
-  const framesEl = document.getElementById("frames");
-  const framesMobileEl = document.getElementById("framesMobile");
-  const toggleFramesBtn = document.getElementById("toggleFramesBtn");
-  const mobileFramesWrap = document.getElementById("mobileFramesWrap");
+  const boothEl = document.querySelector(".booth"); // <-- used for crop aspect
 
-  const boothEl = document.querySelector(".booth");
-
-  // Settings
   const SHOTS = 3;
   const COUNTDOWN_SECONDS = 3;
 
-  // These are your “templates/frames” (same assets)
   const FRAMES = [
     { name: "Gathering Classic", src: "assets/frames/frame-gathering-classic.png" },
     { name: "Killough Maroon",   src: "assets/frames/frame-killough-maroon.png" },
@@ -52,18 +47,10 @@
   let stripDataUrl = "";
   let busy = false;
 
-  // ---------- UI helpers ----------
   function setChip(state, text) {
     chipText.textContent = text;
     chipDot.classList.remove("ok", "warn", "bad");
     chipDot.classList.add(state);
-  }
-
-  function setButtonsEnabled(enabled) {
-    if (startBtn) startBtn.disabled = !enabled;
-    if (resetBtn) resetBtn.disabled = !enabled;
-    if (startBtnMobile) startBtnMobile.disabled = !enabled;
-    if (resetBtnMobile) resetBtnMobile.disabled = !enabled;
   }
 
   function sleep(ms) {
@@ -73,16 +60,9 @@
   function showPrompt(text, ms = 900) {
     promptEl.textContent = text;
     promptEl.classList.add("show");
-    if (ms > 0) setTimeout(() => promptEl.classList.remove("show"), ms);
-  }
-
-  function showCountdown(n) {
-    countdownEl.style.opacity = 1;
-    countdownEl.textContent = String(n);
-  }
-  function hideCountdown() {
-    countdownEl.style.opacity = 0;
-    countdownEl.textContent = "";
+    if (ms > 0) {
+      setTimeout(() => promptEl.classList.remove("show"), ms);
+    }
   }
 
   function flashFlicker() {
@@ -104,24 +84,23 @@
     }, 260);
   }
 
-  // ---------- Template picker ----------
-  function syncFrameSelectedUI() {
-    [...document.querySelectorAll(".frameCard")].forEach((el, idx) => {
-      el.classList.toggle("selected", idx === selectedFrame);
-    });
-    [...document.querySelectorAll(".framePill")].forEach((el, idx) => {
-      el.classList.toggle("selected", idx === selectedFrame);
-    });
+  function showCountdown(n) {
+    countdownEl.style.opacity = 1;
+    countdownEl.textContent = String(n);
+  }
+  function hideCountdown() {
+    countdownEl.style.opacity = 0;
+    countdownEl.textContent = "";
   }
 
-  function setFrame(i) {
-    selectedFrame = i;
-    frameOverlay.src = FRAMES[i].src;
-    syncFrameSelectedUI();
+  function setButtonsEnabled(enabled) {
+    startBtn.disabled = !enabled;
+    resetBtn.disabled = !enabled;
+    startBtnMobile.disabled = !enabled;
+    resetBtnMobile.disabled = !enabled;
   }
 
   function buildFramePickerDesktop() {
-    if (!framesEl) return;
     framesEl.innerHTML = "";
     FRAMES.forEach((f, i) => {
       const card = document.createElement("div");
@@ -165,17 +144,27 @@
     });
   }
 
-  // ---------- Camera ----------
+  function syncFrameSelectedUI() {
+    [...document.querySelectorAll(".frameCard")].forEach((el, idx) => {
+      el.classList.toggle("selected", idx === selectedFrame);
+    });
+    [...document.querySelectorAll(".framePill")].forEach((el, idx) => {
+      el.classList.toggle("selected", idx === selectedFrame);
+    });
+  }
+
+  function setFrame(i) {
+    selectedFrame = i;
+    frameOverlay.src = FRAMES[i].src;
+    syncFrameSelectedUI();
+  }
+
   async function ensureCamera() {
     if (stream) return true;
 
     try {
       stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: "user",
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        },
+        video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
         audio: false
       });
 
@@ -208,24 +197,17 @@
     });
   }
 
-  /**
-   * IMPORTANT FIX:
-   * Capture crops to the SAME aspect ratio as the booth you see on-screen.
-   * This prevents phone portrait camera from producing tall/odd-looking strip photos.
-   */
+  // ✅ FIX #1: crop capture to match booth aspect ratio (prevents tall portrait strip on phones)
   async function captureWithOverlay() {
     if (!video.videoWidth || !video.videoHeight) await sleep(200);
 
     const vw = video.videoWidth;
     const vh = video.videoHeight;
 
-    const targetAspect = (() => {
-      const bw = boothEl?.clientWidth || 4;
-      const bh = boothEl?.clientHeight || 3;
-      return bw / bh;
-    })();
+    const boothW = boothEl?.clientWidth || 4;
+    const boothH = boothEl?.clientHeight || 3;
+    const targetAspect = boothW / boothH;
 
-    // Center-crop in SOURCE space to match target aspect
     const srcAspect = vw / vh;
     let sx = 0, sy = 0, sw = vw, sh = vh;
 
@@ -239,7 +221,7 @@
       sy = Math.round((vh - sh) / 2);
     }
 
-    // Output size (keeps quality consistent)
+    // output resolution
     const outW = 1200;
     const outH = Math.round(outW / targetAspect);
 
@@ -248,20 +230,17 @@
     canvas.height = outH;
     const ctx = canvas.getContext("2d");
 
-    // Mirror like the preview
+    // mirror like preview
     ctx.save();
     ctx.translate(outW, 0);
     ctx.scale(-1, 1);
     ctx.drawImage(video, sx, sy, sw, sh, 0, 0, outW, outH);
     ctx.restore();
 
-    // Overlay
     try {
       const overlay = await loadImage(FRAMES[selectedFrame].src);
       ctx.drawImage(overlay, 0, 0, outW, outH);
-    } catch (e) {
-      // ignore
-    }
+    } catch (e) {}
 
     return canvas.toDataURL("image/png", 0.92);
   }
@@ -271,11 +250,9 @@
 
     const stripW = 900;
     const photoW = stripW;
-
-    // Use the captured image aspect (which now matches booth aspect across devices)
     const photoH = Math.round(photoW * (loaded[0].height / loaded[0].width));
-
     const gap = 20, headerH = 120, footerH = 160;
+
     const totalH = headerH + (photoH * loaded.length) + (gap * (loaded.length - 1)) + footerH;
 
     const c = document.createElement("canvas");
@@ -317,7 +294,6 @@
     return c.toDataURL("image/png", 0.92);
   }
 
-  // ---------- Result modal ----------
   function openResult(dataUrl) {
     stripDataUrl = dataUrl;
     stripPreview.src = dataUrl;
@@ -325,11 +301,15 @@
     modal.style.display = "flex";
     document.body.classList.add("modalOpen");
 
-    // ensure preview starts at top on desktop if any scroll exists
     const preview = document.querySelector(".preview");
     if (preview) {
       preview.scrollTop = 0;
-      requestAnimationFrame(() => (preview.scrollTop = 0));
+      requestAnimationFrame(() => {
+        preview.scrollTop = 0;
+        requestAnimationFrame(() => {
+          preview.scrollTop = 0;
+        });
+      });
     }
   }
 
@@ -346,30 +326,26 @@
     setChip(stream ? "ok" : "warn", stream ? "Camera ready" : "Tap Begin");
   }
 
-  // Change: “Download” behaves like normal save/share sheet on iOS
-  function saveStrip() {
+  // ✅ FIX: behave like “Save Image” on iPhone/iPad (opens image so user can save)
+  function downloadStrip() {
     if (!stripDataUrl) return;
 
     const filename = `GOS_PhotoStrip_${new Date().toISOString().replace(/[:.]/g, "-")}.png`;
-
-    // iOS Safari: opening the image lets user "Save Image" easily
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
     if (isIOS) {
       const w = window.open();
       if (w) {
         w.document.write(`<title>${filename}</title>`);
-        w.document.write(`<img src="${stripDataUrl}" style="max-width:100%;height:auto;display:block;margin:0 auto;" />`);
-      } else {
-        // fallback: normal download
-        const a = document.createElement("a");
-        a.href = stripDataUrl;
-        a.download = filename;
-        a.click();
+        w.document.write(`<meta name="viewport" content="width=device-width,initial-scale=1">`);
+        w.document.write(`<body style="margin:0;background:#000;display:flex;justify-content:center;align-items:center;min-height:100vh;">
+          <img src="${stripDataUrl}" style="max-width:100%;height:auto;display:block;" />
+        </body>`);
+        return;
       }
-      return;
     }
 
-    // Desktop / others: download
+    // fallback download
     const a = document.createElement("a");
     a.href = stripDataUrl;
     a.download = filename;
@@ -396,7 +372,6 @@
     const payload = JSON.stringify({ email, pngDataUrl: stripDataUrl });
 
     try {
-      // text/plain avoids CORS preflight issues on iOS Safari
       await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -414,7 +389,6 @@
     }
   }
 
-  // ---------- Session ----------
   async function startSession() {
     if (busy) return;
     busy = true;
@@ -427,12 +401,12 @@
       }
 
       setChip("warn", "Get ready…");
-      showPrompt("Get ready for 3 photos", 1100);
-      await sleep(850);
+      showPrompt("Get ready for 3 photos", 1200);
+      await sleep(900);
 
       setChip("warn", "Capturing…");
-      if (startBtn) startBtn.disabled = true;
-      if (startBtnMobile) startBtnMobile.disabled = true;
+      startBtn.disabled = true;
+      startBtnMobile.disabled = true;
 
       const shots = [];
       for (let s = 1; s <= SHOTS; s++) {
@@ -459,13 +433,12 @@
       setChip("bad", "Capture error");
       alert("Capture error: " + (e?.message || e));
     } finally {
-      if (startBtn) startBtn.disabled = false;
-      if (startBtnMobile) startBtnMobile.disabled = false;
+      startBtn.disabled = false;
+      startBtnMobile.disabled = false;
       busy = false;
     }
   }
 
-  // ---------- Events ----------
   if (toggleFramesBtn && mobileFramesWrap) {
     toggleFramesBtn.addEventListener("click", () => {
       const open = mobileFramesWrap.classList.toggle("open");
@@ -477,19 +450,18 @@
     const ok = await ensureCamera();
     if (!ok) return;
     home.style.display = "none";
-    showPrompt("Choose a template, then press Start", 1200);
+    showPrompt("Choose a frame, then press Start", 1200);
   });
 
-  if (startBtn) startBtn.addEventListener("click", startSession);
-  if (resetBtn) resetBtn.addEventListener("click", startOver);
-  if (startBtnMobile) startBtnMobile.addEventListener("click", startSession);
-  if (resetBtnMobile) resetBtnMobile.addEventListener("click", startOver);
+  startBtn.addEventListener("click", startSession);
+  resetBtn.addEventListener("click", startOver);
+  startBtnMobile.addEventListener("click", startSession);
+  resetBtnMobile.addEventListener("click", startOver);
 
-  downloadBtn.addEventListener("click", saveStrip);
+  downloadBtn.addEventListener("click", downloadStrip);
   emailBtn.addEventListener("click", emailStrip);
   startOverBtn.addEventListener("click", startOver);
 
-  // Init
   buildFramePickerDesktop();
   buildFramePickerMobile();
   setFrame(0);
