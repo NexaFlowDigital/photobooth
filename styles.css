@@ -504,3 +504,29 @@ body.modalOpen .mobileBar{
 
   body.modalOpen .mobileBar{ display:none !important; }
 }
+/* ===== PATCH: Mobile template screen fits without scrolling ===== */
+@media (max-width: 980px){
+  /* Use dynamic viewport units on iOS Safari */
+  .stage{
+    padding-bottom: 170px; /* was 200px; gives booth more room */
+  }
+
+  .booth{
+    height: calc(100dvh - 64px - 170px - 20px);
+  }
+
+  .mobileBar{
+    padding: 8px 10px 10px;
+  }
+
+  /* Make template thumbnails smaller so the bar doesn’t push content off-screen */
+  .framePill{ width: 104px; }
+  .framePill img{ width: 104px; height: 118px; }
+  .framePill .name{ padding: 6px 8px; font-size: 11px; }
+
+  /* Make buttons slightly shorter (still finger friendly) */
+  .mobileControls .btn{
+    padding: 12px 10px;
+    font-size: 15px;
+  }
+}
