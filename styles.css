@@ -552,3 +552,22 @@ body.captureActive .mobileBar{
   .panel .btn{ width:100%; min-width:0; }
   .divider{ margin:10px 0; }
 }
+/* ===== Mobile override: hide bottom bar unless on Capture screen ===== */
+@media (max-width: 980px){
+  .mobileBar{ 
+    display:none !important;
+  }
+
+  body.captureActive .mobileBar{
+    display:block !important;
+  }
+
+  /* prevent Safari bottom UI from covering the bar */
+  body.captureActive{
+    padding-bottom: calc(72px + env(safe-area-inset-bottom));
+  }
+
+  body.captureActive .mobileBar{
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
