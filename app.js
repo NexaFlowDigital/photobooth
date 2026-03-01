@@ -1,4 +1,4 @@
-/* app.js — Full file (Photo + GIF + Boomerang) */
+/* app.js — Full file (Photo + GIF (3 stills -> loop) + Boomerang (record time shown)) */
 (() => {
   const CONFIG = window.PHOTOBOOTH_CONFIG || { GAS_POST_URL: "" };
 
@@ -56,8 +56,19 @@
   // ---------- CONFIG ----------
   const MODES = { PHOTO: "photo", GIF: "gif", BOOM: "boom" };
 
+  // Photo strip
   const SHOTS = 3;
   const COUNTDOWN_SECONDS = 3;
+
+  // GIF (3 stills -> animated loop)
+  const GIF_SHOTS = 3;           // take 3 images like Photo mode
+  const GIF_FPS = 2;             // 2 frames/sec (each frame ~0.5s)
+  const GIF_LOOP_SECONDS = 4;    // total loop length exported (webm)
+
+  // BOOMERANG timing
+  const BOOM_RECORD_MS = 1200;   // how long we record the live action
+  const BOOM_FPS = 18;
+  const BOOM_EXPORT_MS = 2400;   // forward + reverse playback export length
 
   // Make sure these file paths exist in your repo.
   const FRAMES = [
@@ -75,9 +86,9 @@
   let busy = false;
 
   // Results
-  let stripDataUrl = "";     // photo result (png)
-  let animBlobUrl = "";      // animation result (objectURL)
-  let animMime = "";         // recorder mime
+  let stripDataUrl = "";        // photo result (png)
+  let animBlobUrl = "";         // animation result (objectURL)
+  let animMime = "";            // recorder mime
   let lastResultType = "photo"; // "photo" | "anim"
 
   // ---------- UI HELPERS ----------
@@ -439,7 +450,9 @@
     animBlobUrl = URL.createObjectURL(blob);
 
     resultTitle.textContent = selectedMode === MODES.BOOM ? "Your Boomerang" : "Your GIF";
-    resultSub.textContent = "Download it (video).";
+    resultSub.textContent = selectedMode === MODES.BOOM
+      ? `Recorded ${Math.round(BOOM_RECORD_MS / 100) / 10}s • Download video`
+      : `3-photo loop • About ${GIF_LOOP_SECONDS}s • Download video`;
 
     stripPreview.classList.remove("show");
     stripPreview.removeAttribute("src");
@@ -566,10 +579,9 @@
   // ---------- CAPTURE MODES ----------
   async function runPhotoCapture() {
     setChip("warn", "Get ready…");
-    showPrompt("Get ready for 3 photos", 1200);
+    showPrompt("You’ll take 3 photos", 1200);
     await sleep(900);
 
-    setChip("warn", "Capturing…");
     startBtn.disabled = true;
     startBtnMobile.disabled = true;
 
@@ -594,27 +606,67 @@
     setChip("ok", "Done");
   }
 
+  // GIF: 3 stills -> loop animation (export as webm)
   async function runGifCapture() {
     const size = 720;
-    const fps = 20;
-    const durationMs = 2200;
 
-    const canvas = document.createElement("canvas");
-    canvas.width = size;
-    canvas.height = size;
-    const ctx = canvas.getContext("2d");
+    setChip("warn", "Get ready…");
+    showPrompt(`You’ll take ${GIF_SHOTS} photos`, 1200);
+    await sleep(900);
 
-    let rafId = 0;
-    const start = performance.now();
+    startBtn.disabled = true;
+    startBtnMobile.disabled = true;
 
-    const loop = async (t) => {
+    const stills = [];
+
+    for (let s = 1; s <= GIF_SHOTS; s++) {
+      showPrompt(`GIF photo ${s} of ${GIF_SHOTS}`, 900);
+
+      for (let t = COUNTDOWN_SECONDS; t >= 1; t--) {
+        showCountdown(t);
+        await sleep(900);
+      }
+      hideCountdown();
+
+      flashFlicker();
+
+      // Capture a square still
+      const canvas = document.createElement("canvas");
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext("2d");
       await drawSquareFrameToCanvas(ctx, size);
-      if (t - start < durationMs + 200) rafId = requestAnimationFrame(loop);
+
+      stills.push(await createImageBitmap(canvas));
+      await sleep(450);
+    }
+
+    setChip("warn", "Building GIF…");
+    showPrompt("Building animation…", 900);
+
+    // Playback the 3 stills in a loop on a canvas while recording WebM
+    const out = document.createElement("canvas");
+    out.width = size;
+    out.height = size;
+    const outCtx = out.getContext("2d");
+
+    let frameIndex = 0;
+    let playing = true;
+
+    const playback = () => {
+      if (!playing) return;
+      outCtx.clearRect(0, 0, size, size);
+      outCtx.drawImage(stills[frameIndex], 0, 0, size, size);
+      frameIndex = (frameIndex + 1) % stills.length;
+      setTimeout(playback, Math.round(1000 / GIF_FPS));
     };
 
-    rafId = requestAnimationFrame(loop);
-    const blob = await recordCanvasWebM(canvas, fps, durationMs);
-    cancelAnimationFrame(rafId);
+    playback();
+
+    const blob = await recordCanvasWebM(out, GIF_FPS, GIF_LOOP_SECONDS * 1000);
+    playing = false;
+
+    stills.forEach((b) => b.close && b.close());
 
     openResultAnim(blob);
     setChip("ok", "Done");
@@ -622,9 +674,13 @@
 
   async function runBoomerangCapture() {
     const size = 720;
-    const fps = 18;
-    const captureMs = 1200; // capture forward
-    const totalMs = 2400;   // forward + reverse
+    const fps = BOOM_FPS;
+
+    setChip("warn", "Boomerang recording…");
+    showPrompt(`Recording ${Math.round(BOOM_RECORD_MS / 100) / 10}s — keep moving`, 1200);
+
+    const captureMs = BOOM_RECORD_MS;
+    const totalMs = BOOM_EXPORT_MS;
 
     const canvas = document.createElement("canvas");
     canvas.width = size;
@@ -691,7 +747,6 @@
       }
 
       if (selectedMode === MODES.BOOM) {
-        setChip("warn", "Capturing boomerang…");
         await runBoomerangCapture();
         return;
       }
@@ -723,10 +778,25 @@
   }
 
   function updateInstructionsCopy() {
-    if (selectedMode === MODES.PHOTO) instructionsSub.textContent = "You’ll take 3 photos automatically.";
-    else if (selectedMode === MODES.GIF) instructionsSub.textContent = "You’ll capture a short animated square.";
-    else if (selectedMode === MODES.BOOM) instructionsSub.textContent = "You’ll capture a boomerang (forward + reverse).";
-    else instructionsSub.textContent = "Choose a mode first.";
+    if (selectedMode === MODES.PHOTO) {
+      instructionsSub.textContent =
+        "You’ll take 3 photos. Hold still during each countdown. We’ll combine them into a photo strip.";
+      return;
+    }
+
+    if (selectedMode === MODES.GIF) {
+      instructionsSub.textContent =
+        `You’ll take ${GIF_SHOTS} photos. After the last shot, we’ll combine them into a looping GIF (about ${GIF_LOOP_SECONDS}s).`;
+      return;
+    }
+
+    if (selectedMode === MODES.BOOM) {
+      instructionsSub.textContent =
+        `Boomerang records for ${Math.round(BOOM_RECORD_MS / 100) / 10}s. Start moving when you press START and keep moving until it finishes.`;
+      return;
+    }
+
+    instructionsSub.textContent = "Choose a mode first.";
   }
 
   // ---------- EVENTS ----------
