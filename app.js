@@ -1,3 +1,4 @@
+/* app.js — Full file (Photo + GIF + Boomerang) */
 (() => {
   const CONFIG = window.PHOTOBOOTH_CONFIG || { GAS_POST_URL: "" };
 
@@ -58,11 +59,12 @@
   const SHOTS = 3;
   const COUNTDOWN_SECONDS = 3;
 
+  // Make sure these file paths exist in your repo.
   const FRAMES = [
     { name: "Gathering Classic", src: "assets/frames/frame-gathering-classic.png" },
-    { name: "Killough Maroon",   src: "assets/frames/frame-killough-maroon.png" },
-    { name: "Farmers Night",     src: "assets/frames/frame-farmers-night.png" },
-    { name: "Texas Star",        src: "assets/frames/frame-texas-star.png" },
+    { name: "Killough Maroon", src: "assets/frames/frame-killough-maroon.png" },
+    { name: "Farmers Night", src: "assets/frames/frame-farmers-night.png" },
+    { name: "Texas Star", src: "assets/frames/frame-texas-star.png" },
   ];
 
   // ---------- STATE ----------
@@ -72,7 +74,11 @@
   let stream = null;
   let busy = false;
 
-  let stripDataUrl = ""; // photo result only (for now)
+  // Results
+  let stripDataUrl = "";     // photo result (png)
+  let animBlobUrl = "";      // animation result (objectURL)
+  let animMime = "";         // recorder mime
+  let lastResultType = "photo"; // "photo" | "anim"
 
   // ---------- UI HELPERS ----------
   function setChip(state, text) {
@@ -111,7 +117,7 @@
       { o: 0.70, t: 140 },
       { o: 0.00, t: 220 },
     ];
-    steps.forEach(s => setTimeout(() => { flashEl.style.opacity = s.o; }, s.t));
+    steps.forEach((s) => setTimeout(() => { flashEl.style.opacity = s.o; }, s.t));
 
     setTimeout(() => {
       flashEl.style.transition = "opacity 220ms ease";
@@ -278,7 +284,8 @@
     const photoH = Math.round(photoW * (loaded[0].height / loaded[0].width));
     const gap = 20, headerH = 120, footerH = 160;
 
-    const totalH = headerH + (photoH * loaded.length) + (gap * (loaded.length - 1)) + footerH;
+    const totalH =
+      headerH + (photoH * loaded.length) + (gap * (loaded.length - 1)) + footerH;
 
     const c = document.createElement("canvas");
     c.width = stripW;
@@ -319,17 +326,132 @@
     return c.toDataURL("image/png", 0.92);
   }
 
+  // ---------- ANIMATION HELPERS (GIF/Boomerang as WebM) ----------
+  function revokeAnimUrl() {
+    if (animBlobUrl) {
+      URL.revokeObjectURL(animBlobUrl);
+      animBlobUrl = "";
+    }
+  }
+
+  function pickRecorderMime() {
+    const candidates = [
+      "video/webm;codecs=vp9",
+      "video/webm;codecs=vp8",
+      "video/webm",
+    ];
+    for (const c of candidates) {
+      if (window.MediaRecorder && MediaRecorder.isTypeSupported(c)) return c;
+    }
+    return "";
+  }
+
+  // Draw a square (1:1) frame from the live camera + overlay into a canvas
+  async function drawSquareFrameToCanvas(ctx, size) {
+    if (!video.videoWidth || !video.videoHeight) await sleep(120);
+
+    const vw = video.videoWidth, vh = video.videoHeight;
+
+    // square crop from center of source
+    const side = Math.min(vw, vh);
+    const sx = Math.floor((vw - side) / 2);
+    const sy = Math.floor((vh - side) / 2);
+
+    // mirror like preview
+    ctx.save();
+    ctx.clearRect(0, 0, size, size);
+    ctx.translate(size, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, sx, sy, side, side, 0, 0, size, size);
+    ctx.restore();
+
+    // overlay scaled to canvas
+    try {
+      const overlayImg = await loadImage(FRAMES[selectedFrame].src);
+      ctx.drawImage(overlayImg, 0, 0, size, size);
+    } catch (e) {}
+  }
+
+  // Record whatever is drawn on a canvas to a WebM blob
+  async function recordCanvasWebM(canvas, fps, ms) {
+    const stream2 = canvas.captureStream(fps);
+    const mime = pickRecorderMime();
+    animMime = mime || "video/webm";
+
+    return await new Promise((resolve, reject) => {
+      const chunks = [];
+      let rec;
+      try {
+        rec = mime ? new MediaRecorder(stream2, { mimeType: mime }) : new MediaRecorder(stream2);
+      } catch (err) {
+        reject(err);
+        return;
+      }
+
+      rec.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
+      rec.onerror = (e) => reject(e.error || e);
+
+      rec.onstop = () => {
+        try {
+          const blob = new Blob(chunks, { type: animMime });
+          resolve(blob);
+        } catch (err) {
+          reject(err);
+        }
+      };
+
+      rec.start(100);
+      setTimeout(() => {
+        try { rec.stop(); } catch (e) {}
+      }, ms);
+    });
+  }
+
   // ---------- RESULT MODAL ----------
   function openResultPhoto(dataUrl) {
+    lastResultType = "photo";
     stripDataUrl = dataUrl;
+
+    revokeAnimUrl();
+    animPreview.pause();
+    animPreview.classList.remove("show");
+    animPreview.removeAttribute("src");
 
     resultTitle.textContent = "Your Photo Strip";
     resultSub.textContent = "Download it or email it to yourself.";
 
     stripPreview.src = dataUrl;
     stripPreview.classList.add("show");
-    animPreview.classList.remove("show");
-    animPreview.removeAttribute("src");
+
+    // enable email for photos
+    emailBtn.disabled = false;
+    emailInput.disabled = false;
+
+    modal.style.display = "flex";
+    document.body.classList.add("modalOpen");
+  }
+
+  function openResultAnim(blob) {
+    revokeAnimUrl();
+    lastResultType = "anim";
+    stripDataUrl = "";
+
+    animBlobUrl = URL.createObjectURL(blob);
+
+    resultTitle.textContent = selectedMode === MODES.BOOM ? "Your Boomerang" : "Your GIF";
+    resultSub.textContent = "Download it (video).";
+
+    stripPreview.classList.remove("show");
+    stripPreview.removeAttribute("src");
+
+    animPreview.src = animBlobUrl;
+    animPreview.classList.add("show");
+    animPreview.currentTime = 0;
+    animPreview.play().catch(() => {});
+
+    // disable email for animations (your GAS expects pngDataUrl)
+    emailBtn.disabled = true;
+    emailInput.disabled = true;
 
     modal.style.display = "flex";
     document.body.classList.add("modalOpen");
@@ -342,18 +464,41 @@
 
   function resetCaptureState() {
     closeResult();
+
     stripDataUrl = "";
     stripPreview.src = "";
     stripPreview.classList.remove("show");
+
+    revokeAnimUrl();
+    animPreview.pause();
     animPreview.classList.remove("show");
     animPreview.removeAttribute("src");
+
     emailInput.value = "";
+    emailBtn.disabled = false;
+    emailInput.disabled = false;
+
     setChip(stream ? "ok" : "warn", stream ? "Camera ready" : "Ready");
     showPrompt("Press START when ready", 1200);
   }
 
-  // iOS-friendly download
-  function downloadStrip() {
+  // iOS-friendly download for photo; webm download for animations
+  function downloadResult() {
+    const isAnim = lastResultType === "anim";
+
+    if (isAnim && animBlobUrl) {
+      const ext = "webm";
+      const filename = `GOS_${selectedMode === MODES.BOOM ? "Boomerang" : "GIF"}_${new Date()
+        .toISOString()
+        .replace(/[:.]/g, "-")}.${ext}`;
+      const a = document.createElement("a");
+      a.href = animBlobUrl;
+      a.download = filename;
+      a.click();
+      return;
+    }
+
+    // PHOTO download
     if (!stripDataUrl) return;
 
     const filename = `GOS_PhotoStrip_${new Date().toISOString().replace(/[:.]/g, "-")}.png`;
@@ -384,12 +529,17 @@
       return;
     }
 
+    // Only allow email for photos
+    if (!stripDataUrl) {
+      alert("Email is only available for photo strips.");
+      return;
+    }
+
     const email = emailInput.value.trim();
     if (!email) {
       alert("Enter your email.");
       return;
     }
-    if (!stripDataUrl) return;
 
     emailBtn.disabled = true;
     setChip("warn", "Sending email…");
@@ -413,7 +563,116 @@
     }
   }
 
-  // ---------- CAPTURE ----------
+  // ---------- CAPTURE MODES ----------
+  async function runPhotoCapture() {
+    setChip("warn", "Get ready…");
+    showPrompt("Get ready for 3 photos", 1200);
+    await sleep(900);
+
+    setChip("warn", "Capturing…");
+    startBtn.disabled = true;
+    startBtnMobile.disabled = true;
+
+    const shots = [];
+    for (let s = 1; s <= SHOTS; s++) {
+      showPrompt(`Photo ${s} of ${SHOTS} • Say cheese`, 950);
+
+      for (let t = COUNTDOWN_SECONDS; t >= 1; t--) {
+        showCountdown(t);
+        await sleep(900);
+      }
+      hideCountdown();
+
+      flashFlicker();
+      shots.push(await captureWithOverlay());
+      await sleep(450);
+    }
+
+    setChip("warn", "Building strip…");
+    const strip = await buildPhotoStrip(shots);
+    openResultPhoto(strip);
+    setChip("ok", "Done");
+  }
+
+  async function runGifCapture() {
+    const size = 720;
+    const fps = 20;
+    const durationMs = 2200;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext("2d");
+
+    let rafId = 0;
+    const start = performance.now();
+
+    const loop = async (t) => {
+      await drawSquareFrameToCanvas(ctx, size);
+      if (t - start < durationMs + 200) rafId = requestAnimationFrame(loop);
+    };
+
+    rafId = requestAnimationFrame(loop);
+    const blob = await recordCanvasWebM(canvas, fps, durationMs);
+    cancelAnimationFrame(rafId);
+
+    openResultAnim(blob);
+    setChip("ok", "Done");
+  }
+
+  async function runBoomerangCapture() {
+    const size = 720;
+    const fps = 18;
+    const captureMs = 1200; // capture forward
+    const totalMs = 2400;   // forward + reverse
+
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext("2d");
+
+    // 1) collect frames
+    const frames = [];
+    const temp = document.createElement("canvas");
+    temp.width = size; temp.height = size;
+    const tctx = temp.getContext("2d");
+
+    const start = performance.now();
+    while (performance.now() - start < captureMs) {
+      await drawSquareFrameToCanvas(tctx, size);
+      const bmp = await createImageBitmap(temp);
+      frames.push(bmp);
+      await sleep(1000 / fps);
+    }
+
+    // 2) play forward + reverse into canvas while recording
+    let i = 0;
+    let dir = 1;
+    let playing = true;
+
+    const playback = async () => {
+      if (!playing) return;
+      ctx.clearRect(0, 0, size, size);
+      ctx.drawImage(frames[i], 0, 0, size, size);
+
+      i += dir;
+      if (i >= frames.length - 1) dir = -1;
+      if (i <= 0 && dir === -1) dir = 1;
+
+      setTimeout(playback, Math.round(1000 / fps));
+    };
+
+    playback();
+    const blob = await recordCanvasWebM(canvas, fps, totalMs);
+    playing = false;
+
+    frames.forEach((b) => b.close && b.close());
+
+    openResultAnim(blob);
+    setChip("ok", "Done");
+  }
+
+  // ---------- MAIN SESSION ----------
   async function startSession() {
     if (busy) return;
     busy = true;
@@ -425,39 +684,20 @@
         if (!ok) return;
       }
 
-      if (selectedMode !== MODES.PHOTO) {
-        alert("GIF / Boomerang capture not wired yet in this build.");
+      if (selectedMode === MODES.GIF) {
+        setChip("warn", "Capturing GIF…");
+        await runGifCapture();
         return;
       }
 
-      setChip("warn", "Get ready…");
-      showPrompt("Get ready for 3 photos", 1200);
-      await sleep(900);
-
-      setChip("warn", "Capturing…");
-      startBtn.disabled = true;
-      startBtnMobile.disabled = true;
-
-      const shots = [];
-      for (let s = 1; s <= SHOTS; s++) {
-        showPrompt(`Photo ${s} of ${SHOTS} • Say cheese`, 950);
-
-        for (let t = COUNTDOWN_SECONDS; t >= 1; t--) {
-          showCountdown(t);
-          await sleep(900);
-        }
-        hideCountdown();
-
-        flashFlicker();
-        shots.push(await captureWithOverlay());
-        await sleep(450);
+      if (selectedMode === MODES.BOOM) {
+        setChip("warn", "Capturing boomerang…");
+        await runBoomerangCapture();
+        return;
       }
 
-      setChip("warn", "Building strip…");
-      const strip = await buildPhotoStrip(shots);
-      openResultPhoto(strip);
-
-      setChip("ok", "Done");
+      // default: PHOTO
+      await runPhotoCapture();
     } catch (e) {
       console.error(e);
       setChip("bad", "Capture error");
@@ -530,7 +770,7 @@
   resetBtn.addEventListener("click", resetCaptureState);
   resetBtnMobile.addEventListener("click", resetCaptureState);
 
-  downloadBtn.addEventListener("click", downloadStrip);
+  downloadBtn.addEventListener("click", downloadResult);
   emailBtn.addEventListener("click", emailStrip);
   startOverBtn.addEventListener("click", resetCaptureState);
 
