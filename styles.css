@@ -387,8 +387,12 @@ video{
 }
 .tinyNote{ margin-top:10px; font-size:12px; color:var(--muted); line-height:1.35; }
 
-/* mobile bar */
+/* mobile bar is ONLY visible during capture screen */
 .mobileBar{ display:none; }
+
+body.captureActive .mobileBar{
+  display:block;
+}
 
 /* ---------- MOBILE: NO SCROLLING SCREENS ---------- */
 @media (max-width: 980px){
