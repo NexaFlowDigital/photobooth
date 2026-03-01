@@ -571,3 +571,28 @@ body.captureActive .mobileBar{
     padding-bottom: env(safe-area-inset-bottom);
   }
 }
+/* ===== Mobile: reclaim space when mobile bar is hidden + keep Continue visible ===== */
+@media (max-width: 980px){
+
+  /* 1) Only reserve bottom space when we're actually on capture screen */
+  .stage{
+    padding-bottom: 10px !important; /* was always reserving ~86px */
+  }
+  body.captureActive .stage{
+    padding-bottom: calc(86px + env(safe-area-inset-bottom)) !important;
+  }
+
+  /* 2) Let the template grid scroll inside the fixed-height card */
+  .frameGrid{
+    flex: 1 1 auto;
+    min-height: 0;          /* critical for flex children to scroll */
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 10px;   /* keeps last row away from buttons */
+  }
+
+  /* optional: makes tiles shorter so you see more at once */
+  .frameThumb{
+    aspect-ratio: 2 / 3;    /* was 3/4 */
+  }
+}
