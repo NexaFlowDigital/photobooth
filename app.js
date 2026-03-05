@@ -486,7 +486,34 @@
   }
 
   function resetCaptureState() {
-    closeResult();
+  closeResult();
+
+  stripDataUrl = "";
+  stripPreview.src = "";
+  stripPreview.classList.remove("show");
+
+  revokeAnimUrl();
+  animPreview.pause();
+  animPreview.classList.remove("show");
+  animPreview.removeAttribute("src");
+
+  emailInput.value = "";
+  emailBtn.disabled = false;
+  emailInput.disabled = false;
+
+  selectedMode = null;
+
+  // remove selected buttons
+  [modePhotoBtn, modeGifBtn, modeBoomBtn].forEach(b => b.classList.remove("selected"));
+
+  modeContinueBtn.disabled = true;
+  templateContinueBtn.disabled = true;
+
+  // 👇 THIS IS THE IMPORTANT PART
+  setScreen(screenMode);
+
+  setChip(stream ? "ok" : "warn", stream ? "Camera ready" : "Ready");
+}
 
     stripDataUrl = "";
     stripPreview.src = "";
