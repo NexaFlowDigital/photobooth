@@ -1,4 +1,4 @@
-/* app.js — Full file (Photo + GIF (3 stills -> loop) + Boomerang (record time shown) + Mobile Share download) */
+/* app.js — Full file (Photo + GIF + Boomerang) + Email for ALL + Better download types */
 (() => {
   const CONFIG = window.PHOTOBOOTH_CONFIG || { GAS_POST_URL: "" };
 
@@ -63,7 +63,7 @@
   // GIF (3 stills -> animated loop)
   const GIF_SHOTS = 3;
   const GIF_FPS = 2;
-  const GIF_LOOP_SECONDS = 4; // exported as webm (GIF-like)
+  const GIF_LOOP_SECONDS = 4; // exported as video (mp4/webm)
 
   // BOOMERANG timing
   const BOOM_RECORD_MS = 1200; // actual “recording” time
@@ -242,7 +242,7 @@
     });
   }
 
-  // Crop capture to match booth aspect ratio (prevents weird tall crop on phones)
+  // Crop capture to match booth aspect ratio
   async function captureWithOverlay() {
     if (!video.videoWidth || !video.videoHeight) await sleep(200);
 
@@ -337,7 +337,7 @@
     return c.toDataURL("image/png", 0.92);
   }
 
-  // ---------- ANIMATION HELPERS (GIF/Boomerang as WebM) ----------
+  // ---------- ANIMATION HELPERS (Video export: tries MP4 then WebM) ----------
   function revokeAnimUrl() {
     if (animBlobUrl) {
       URL.revokeObjectURL(animBlobUrl);
@@ -346,7 +346,11 @@
   }
 
   function pickRecorderMime() {
+    // MP4 is NOT widely supported in MediaRecorder (Chrome usually NO, Safari sometimes YES).
+    // We try anyway, then fall back to WebM.
     const candidates = [
+      "video/mp4;codecs=h264,aac",
+      "video/mp4",
       "video/webm;codecs=vp9",
       "video/webm;codecs=vp8",
       "video/webm",
@@ -357,7 +361,13 @@
     return "";
   }
 
-  // Draw a square (1:1) frame from the live camera + overlay into a canvas
+  function mimeToExtension(mime) {
+    const m = (mime || "").toLowerCase();
+    if (m.includes("mp4")) return "mp4";
+    if (m.includes("webm")) return "webm";
+    return "webm";
+  }
+
   async function drawSquareFrameToCanvas(ctx, size) {
     if (!video.videoWidth || !video.videoHeight) await sleep(120);
 
@@ -376,15 +386,13 @@
     ctx.drawImage(video, sx, sy, side, side, 0, 0, size, size);
     ctx.restore();
 
-    // overlay scaled to canvas
     try {
       const overlayImg = await loadImage(FRAMES[selectedFrame].src);
       ctx.drawImage(overlayImg, 0, 0, size, size);
     } catch (e) {}
   }
 
-  // Record whatever is drawn on a canvas to a WebM blob
-  async function recordCanvasWebM(canvas, fps, ms) {
+  async function recordCanvasVideo(canvas, fps, ms) {
     const stream2 = canvas.captureStream(fps);
     const mime = pickRecorderMime();
     animMime = mime || "video/webm";
@@ -434,7 +442,7 @@
     stripPreview.src = dataUrl;
     stripPreview.classList.add("show");
 
-    // enable email for photos
+    // email enabled
     emailBtn.disabled = false;
     emailInput.disabled = false;
 
@@ -448,11 +456,13 @@
     stripDataUrl = "";
 
     animBlobUrl = URL.createObjectURL(blob);
+    const ext = mimeToExtension(animMime);
 
     resultTitle.textContent = selectedMode === MODES.BOOM ? "Your Boomerang" : "Your GIF";
-    resultSub.textContent = selectedMode === MODES.BOOM
-      ? `Recorded ${Math.round(BOOM_RECORD_MS / 100) / 10}s • Download video`
-      : `3-photo loop • About ${GIF_LOOP_SECONDS}s • Download video`;
+    resultSub.textContent =
+      (selectedMode === MODES.BOOM)
+        ? `Recorded ${Math.round(BOOM_RECORD_MS / 100) / 10}s • Download video (${ext.toUpperCase()}) or email it`
+        : `3-photo loop • About ${GIF_LOOP_SECONDS}s • Download video (${ext.toUpperCase()}) or email it`;
 
     stripPreview.classList.remove("show");
     stripPreview.removeAttribute("src");
@@ -462,9 +472,9 @@
     animPreview.currentTime = 0;
     animPreview.play().catch(() => {});
 
-    // disable email for animations (your GAS expects pngDataUrl)
-    emailBtn.disabled = true;
-    emailInput.disabled = true;
+    // email ENABLED for animations now
+    emailBtn.disabled = false;
+    emailInput.disabled = false;
 
     modal.style.display = "flex";
     document.body.classList.add("modalOpen");
@@ -495,27 +505,27 @@
     showPrompt("Press START when ready", 1200);
   }
 
-  // ---------- DOWNLOAD (Mobile share sheet, desktop direct download) ----------
+  // ---------- DOWNLOAD ----------
   async function downloadResult() {
     const isAnim = lastResultType === "anim";
     const isMobile = matchMedia("(max-width: 980px)").matches;
 
-    // Helper: convert dataURL -> Blob
     async function dataUrlToBlob(dataUrl) {
       const res = await fetch(dataUrl);
       return await res.blob();
     }
 
-    // Build the file payload
     let blob, filename, mime;
 
     if (isAnim) {
       if (!animBlobUrl) return;
-      mime = animMime || "video/webm";
       blob = await (await fetch(animBlobUrl)).blob();
+      mime = animMime || blob.type || "video/webm";
+      const ext = mimeToExtension(mime);
+
       filename = `GOS_${selectedMode === MODES.BOOM ? "Boomerang" : "GIF"}_${new Date()
         .toISOString()
-        .replace(/[:.]/g, "-")}.webm`;
+        .replace(/[:.]/g, "-")}.${ext}`;
     } else {
       if (!stripDataUrl) return;
       mime = "image/png";
@@ -523,7 +533,7 @@
       filename = `GOS_PhotoStrip_${new Date().toISOString().replace(/[:.]/g, "-")}.png`;
     }
 
-    // MOBILE: Share Sheet (Save to Photos / Files / apps) when available
+    // Mobile share sheet if possible
     if (isMobile && navigator.share) {
       try {
         const file = new File([blob], filename, { type: mime });
@@ -541,7 +551,6 @@
       }
     }
 
-    // DESKTOP + fallback: direct download
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -552,16 +561,25 @@
     setTimeout(() => URL.revokeObjectURL(url), 1500);
   }
 
-  async function emailStrip() {
+  // ---------- EMAIL (Photo + Animations) ----------
+  async function blobToBase64(blob) {
+    return await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        // reader.result is "data:...;base64,AAAA"
+        const s = String(reader.result || "");
+        const comma = s.indexOf(",");
+        resolve(comma >= 0 ? s.slice(comma + 1) : s);
+      };
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  async function emailResult() {
     const url = (CONFIG.GAS_POST_URL || "").trim();
     if (!url) {
       alert("Email is not configured. Add your Apps Script URL in config.js.");
-      return;
-    }
-
-    // Only allow email for photos
-    if (!stripDataUrl) {
-      alert("Email is only available for photo strips.");
       return;
     }
 
@@ -574,20 +592,51 @@
     emailBtn.disabled = true;
     setChip("warn", "Sending email…");
 
-    const payload = JSON.stringify({ email, pngDataUrl: stripDataUrl });
-
     try {
+      let payloadObj;
+
+      if (lastResultType === "photo") {
+        if (!stripDataUrl) throw new Error("No photo available to email.");
+        payloadObj = {
+          email,
+          type: "photo",
+          filename: `GOS_PhotoStrip_${new Date().toISOString().replace(/[:.]/g, "-")}.png`,
+          mimeType: "image/png",
+          pngDataUrl: stripDataUrl,
+        };
+      } else {
+        if (!animBlobUrl) throw new Error("No animation available to email.");
+        const blob = await (await fetch(animBlobUrl)).blob();
+        const mime = animMime || blob.type || "video/webm";
+        const ext = mimeToExtension(mime);
+        const base64 = await blobToBase64(blob);
+
+        payloadObj = {
+          email,
+          type: selectedMode === MODES.BOOM ? "boomerang" : "gif",
+          filename: `GOS_${selectedMode === MODES.BOOM ? "Boomerang" : "GIF"}_${new Date()
+            .toISOString()
+            .replace(/[:.]/g, "-")}.${ext}`,
+          mimeType: mime,
+          fileBase64: base64,
+        };
+      }
+
+      // Keep text/plain to avoid CORS preflight issues with Apps Script
+      const payload = JSON.stringify(payloadObj);
+
       await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: payload,
       });
+
       setChip("ok", "Email sent");
-      alert("Sent! Check your email.");
+      alert("Sent! Check your email (and spam/junk just in case).");
     } catch (e) {
       console.error(e);
       setChip("bad", "Email failed");
-      alert("Email failed. Check your Apps Script deployment access.");
+      alert("Email failed. Check your Apps Script deployment + permissions.");
     } finally {
       emailBtn.disabled = false;
     }
@@ -623,7 +672,6 @@
     setChip("ok", "Done");
   }
 
-  // GIF: 3 stills -> loop animation (export as webm)
   async function runGifCapture() {
     const size = 720;
 
@@ -647,7 +695,6 @@
 
       flashFlicker();
 
-      // Capture a square still
       const canvas = document.createElement("canvas");
       canvas.width = size;
       canvas.height = size;
@@ -661,7 +708,6 @@
     setChip("warn", "Building GIF…");
     showPrompt("Building animation…", 900);
 
-    // Playback the 3 stills in a loop on a canvas while recording WebM
     const out = document.createElement("canvas");
     out.width = size;
     out.height = size;
@@ -680,7 +726,7 @@
 
     playback();
 
-    const blob = await recordCanvasWebM(out, GIF_FPS, GIF_LOOP_SECONDS * 1000);
+    const blob = await recordCanvasVideo(out, GIF_FPS, GIF_LOOP_SECONDS * 1000);
     playing = false;
 
     stills.forEach((b) => b.close && b.close());
@@ -704,7 +750,6 @@
     canvas.height = size;
     const ctx = canvas.getContext("2d");
 
-    // 1) collect frames
     const frames = [];
     const temp = document.createElement("canvas");
     temp.width = size;
@@ -719,7 +764,6 @@
       await sleep(1000 / fps);
     }
 
-    // 2) play forward + reverse into canvas while recording
     let i = 0;
     let dir = 1;
     let playing = true;
@@ -737,7 +781,7 @@
     };
 
     playback();
-    const blob = await recordCanvasWebM(canvas, fps, totalMs);
+    const blob = await recordCanvasVideo(canvas, fps, totalMs);
     playing = false;
 
     frames.forEach((b) => b.close && b.close());
@@ -769,7 +813,6 @@
         return;
       }
 
-      // default: PHOTO
       await runPhotoCapture();
     } catch (e) {
       console.error(e);
@@ -782,7 +825,7 @@
     }
   }
 
-  // ---------- FLOW (MODE -> TEMPLATE -> INSTRUCTIONS -> CAPTURE) ----------
+  // ---------- FLOW ----------
   function selectMode(mode) {
     selectedMode = mode;
 
@@ -804,7 +847,7 @@
 
     if (selectedMode === MODES.GIF) {
       instructionsSub.textContent =
-        `You’ll take ${GIF_SHOTS} photos. After the last shot, we’ll combine them into a looping GIF (about ${GIF_LOOP_SECONDS}s).`;
+        `You’ll take ${GIF_SHOTS} photos. After the last shot, we’ll combine them into a looping animation (about ${GIF_LOOP_SECONDS}s).`;
       return;
     }
 
@@ -859,7 +902,7 @@
   resetBtnMobile.addEventListener("click", resetCaptureState);
 
   downloadBtn.addEventListener("click", downloadResult);
-  emailBtn.addEventListener("click", emailStrip);
+  emailBtn.addEventListener("click", emailResult);
   startOverBtn.addEventListener("click", resetCaptureState);
 
   // ---------- INIT ----------
