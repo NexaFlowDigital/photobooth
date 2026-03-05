@@ -488,6 +488,7 @@
   function resetCaptureState() {
   closeResult();
 
+  // clear results
   stripDataUrl = "";
   stripPreview.src = "";
   stripPreview.classList.remove("show");
@@ -497,40 +498,22 @@
   animPreview.classList.remove("show");
   animPreview.removeAttribute("src");
 
+  // clear email UI
   emailInput.value = "";
   emailBtn.disabled = false;
   emailInput.disabled = false;
 
+  // reset flow selections
   selectedMode = null;
-
-  // remove selected buttons
-  [modePhotoBtn, modeGifBtn, modeBoomBtn].forEach(b => b.classList.remove("selected"));
-
+  [modePhotoBtn, modeGifBtn, modeBoomBtn].forEach((b) => b.classList.remove("selected"));
   modeContinueBtn.disabled = true;
   templateContinueBtn.disabled = true;
 
-  // 👇 THIS IS THE IMPORTANT PART
+  // go back to home screen (mode selection)
   setScreen(screenMode);
 
   setChip(stream ? "ok" : "warn", stream ? "Camera ready" : "Ready");
 }
-
-    stripDataUrl = "";
-    stripPreview.src = "";
-    stripPreview.classList.remove("show");
-
-    revokeAnimUrl();
-    animPreview.pause();
-    animPreview.classList.remove("show");
-    animPreview.removeAttribute("src");
-
-    emailInput.value = "";
-    emailBtn.disabled = false;
-    emailInput.disabled = false;
-
-    setChip(stream ? "ok" : "warn", stream ? "Camera ready" : "Ready");
-    showPrompt("Press START when ready", 1200);
-  }
 
   // ---------- DOWNLOAD ----------
   async function downloadResult() {
