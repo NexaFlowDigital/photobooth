@@ -68,8 +68,12 @@ body{
   background: rgba(255,255,255,.03);
 }
 .railCardTitle{
-  font-weight:900; font-size:12px; letter-spacing:.5px; text-transform:uppercase;
-  color:rgba(246,247,255,.85); margin-bottom:8px;
+  font-weight:900;
+  font-size:12px;
+  letter-spacing:.5px;
+  text-transform:uppercase;
+  color:rgba(246,247,255,.85);
+  margin-bottom:8px;
 }
 .railCardText{ font-size:12px; color:var(--muted); line-height:1.4; margin:6px 0; }
 .railFooter{ margin-top:18px; font-size:12px; color:rgba(246,247,255,.55); }
@@ -79,6 +83,7 @@ body{
   display:flex;
   flex-direction:column;
   min-width:0;
+  position:relative;
 }
 
 .topbar{
@@ -94,7 +99,9 @@ body{
 .topTitleSub{ margin-top:2px; font-size:12px; color:rgba(246,247,255,.62); }
 
 .statusChip{
-  display:flex; align-items:center; gap:8px;
+  display:flex;
+  align-items:center;
+  gap:8px;
   padding:8px 10px;
   border-radius:999px;
   border:1px solid var(--line);
@@ -114,6 +121,7 @@ body{
   justify-content:center;
   padding:16px;
   min-height:0;
+  position:relative;
 }
 
 /* screens */
@@ -123,6 +131,7 @@ body{
   display:none;
   align-items:center;
   justify-content:center;
+  position:relative;
 }
 .screen.show{ display:flex; }
 
@@ -168,63 +177,103 @@ body{
 .modeName{ font-weight:900; font-size:18px; letter-spacing:.2px; }
 .modeDesc{ margin-top:6px; color:rgba(246,247,255,.68); font-weight:700; font-size:12px; }
 
-/* kiosk start screen */
+/* ===== KIOSK START SCREEN ===== */
 .kioskModeCard{
-  position:relative;
-  overflow:hidden;
+  position:static;
+  overflow:visible;
+  width:100%;
+  height:100%;
+  border:none;
+  background:transparent;
+  box-shadow:none;
+  padding:0;
 }
 
+/* hide the regular mode screen UI until the overlay is dismissed */
+.kioskModeCard .screenHeader,
+.kioskModeCard .modeGrid,
+.kioskModeCard .screenActions{
+  opacity:0;
+  pointer-events:none;
+}
+
+/* full-app overlay */
 .kioskStartScreen{
-  position:absolute;
+  position:fixed;
   inset:0;
-  z-index:50;
+  z-index:9999;
   display:flex;
   align-items:center;
   justify-content:center;
-  padding:26px;
+  padding:24px;
   background:
-    radial-gradient(circle at center, rgba(255,45,125,.08) 0%, rgba(255,45,125,.03) 22%, rgba(5,6,11,.90) 62%, rgba(5,6,11,.98) 100%);
+    radial-gradient(circle at center, rgba(255,45,125,.08) 0%, rgba(255,45,125,.03) 20%, rgba(7,7,11,.94) 56%, rgba(7,7,11,.995) 100%);
   transition: opacity .4s ease, transform .4s ease, visibility .4s ease;
+}
+
+/* top-left brand inside kiosk */
+.kioskStartScreen::before{
+  content:"NexaFlow Digital";
+  position:absolute;
+  top:22px;
+  left:26px;
+  z-index:3;
+  font-size:14px;
+  font-weight:900;
+  letter-spacing:1.2px;
+  text-transform:uppercase;
+  color:rgba(246,247,255,.92);
+}
+
+/* hide normal app chrome visually while kiosk is active */
+.kioskStartScreen ~ .screenHeader,
+.kioskStartScreen ~ .modeGrid,
+.kioskStartScreen ~ .screenActions{
+  opacity:0;
 }
 
 .kioskStartScreen.hide{
   opacity:0;
-  transform:scale(1.02);
+  transform:scale(1.01);
   visibility:hidden;
   pointer-events:none;
 }
 
+/* this is the actual border */
 .kioskFrameGlow{
   position:absolute;
   inset:8px;
-  border-radius:28px;
-  border:6px solid rgba(255,45,125,.95);
+  border-radius:34px;
+  border:7px solid rgba(255,45,125,.98);
   box-shadow:
-    0 0 10px rgba(255,45,125,.95),
-    0 0 22px rgba(255,45,125,.85),
-    0 0 42px rgba(255,45,125,.65),
-    inset 0 0 10px rgba(255,45,125,.55),
-    inset 0 0 28px rgba(255,45,125,.28);
-  animation:kioskPulse 2.1s ease-in-out infinite;
+    0 0 12px rgba(255,45,125,1),
+    0 0 24px rgba(255,45,125,.95),
+    0 0 52px rgba(255,45,125,.78),
+    0 0 84px rgba(255,45,125,.38),
+    inset 0 0 12px rgba(255,45,125,.72),
+    inset 0 0 30px rgba(255,45,125,.28);
+  animation:kioskPulse 2s ease-in-out infinite;
   pointer-events:none;
 }
 
 @keyframes kioskPulse{
   0%,100%{
     box-shadow:
-      0 0 10px rgba(255,45,125,.95),
-      0 0 22px rgba(255,45,125,.85),
-      0 0 42px rgba(255,45,125,.65),
-      inset 0 0 10px rgba(255,45,125,.55),
-      inset 0 0 28px rgba(255,45,125,.28);
+      0 0 12px rgba(255,45,125,1),
+      0 0 24px rgba(255,45,125,.95),
+      0 0 52px rgba(255,45,125,.78),
+      0 0 84px rgba(255,45,125,.38),
+      inset 0 0 12px rgba(255,45,125,.72),
+      inset 0 0 30px rgba(255,45,125,.28);
   }
   50%{
     box-shadow:
-      0 0 14px rgba(255,45,125,1),
-      0 0 32px rgba(255,45,125,.95),
-      0 0 60px rgba(255,45,125,.85),
-      inset 0 0 14px rgba(255,45,125,.65),
-      inset 0 0 36px rgba(255,45,125,.32);
+      0 0 16px rgba(255,45,125,1),
+      0 0 34px rgba(255,45,125,1),
+      0 0 66px rgba(255,45,125,.9),
+      0 0 100px rgba(255,45,125,.48),
+      inset 0 0 16px rgba(255,45,125,.82),
+      inset 0 0 38px rgba(255,45,125,.34);
   }
 }
 
@@ -232,49 +281,52 @@ body{
   position:relative;
   z-index:2;
   width:100%;
+  max-width:980px;
   display:flex;
   flex-direction:column;
   align-items:center;
   justify-content:center;
-  gap:18px;
+  gap:20px;
   text-align:center;
 }
 
 .kioskBrand{
-  font-size:clamp(18px, 2vw, 24px);
+  font-size:clamp(18px, 2vw, 26px);
   font-weight:900;
   letter-spacing:2px;
   text-transform:uppercase;
-  color:rgba(246,247,255,.82);
-  text-shadow:0 0 16px rgba(255,45,125,.30);
+  color:rgba(246,247,255,.86);
+  text-shadow:
+    0 0 10px rgba(255,45,125,.22),
+    0 0 24px rgba(255,45,125,.18);
 }
 
 .kioskStartBtn{
   border:none;
-  min-width:min(560px, 82vw);
-  min-height:120px;
+  min-width:min(620px, 82vw);
+  min-height:126px;
   padding:24px 34px;
   border-radius:999px;
   cursor:pointer;
-  font-size:clamp(28px, 4vw, 44px);
+  font-size:clamp(28px, 4vw, 46px);
   font-weight:900;
   letter-spacing:.4px;
   color:#fff;
-  background:linear-gradient(135deg, rgba(255,45,125,.98), rgba(255,45,125,.86));
+  background:linear-gradient(135deg, rgba(255,45,125,.99), rgba(255,45,125,.88));
   box-shadow:
     0 0 16px rgba(255,45,125,.95),
-    0 0 34px rgba(255,45,125,.75),
-    0 18px 42px rgba(0,0,0,.45);
+    0 0 38px rgba(255,45,125,.8),
+    0 20px 52px rgba(0,0,0,.52);
   transition:transform .12s ease, box-shadow .14s ease, filter .14s ease;
 }
 
 .kioskStartBtn:hover{
   transform:scale(1.02);
-  filter:brightness(1.03);
+  filter:brightness(1.04);
   box-shadow:
     0 0 20px rgba(255,45,125,1),
-    0 0 44px rgba(255,45,125,.85),
-    0 20px 48px rgba(0,0,0,.48);
+    0 0 48px rgba(255,45,125,.92),
+    0 24px 56px rgba(0,0,0,.56);
 }
 
 .kioskStartBtn:active{
@@ -285,6 +337,15 @@ body{
   font-size:14px;
   font-weight:700;
   color:rgba(246,247,255,.70);
+}
+
+/* after overlay is hidden, bring back the mode content */
+.kioskStartScreen.hide + .screenHeader,
+.kioskStartScreen.hide ~ .screenHeader,
+.kioskStartScreen.hide ~ .modeGrid,
+.kioskStartScreen.hide ~ .screenActions{
+  opacity:1;
+  pointer-events:auto;
 }
 
 /* templates */
@@ -322,15 +383,21 @@ body{
 /* instruction steps */
 .steps{ margin-top:10px; display:grid; gap:10px; }
 .step{
-  display:flex; gap:10px; align-items:center;
+  display:flex;
+  gap:10px;
+  align-items:center;
   border:1px solid rgba(255,255,255,.10);
   background: rgba(255,255,255,.03);
   border-radius:16px;
   padding:12px;
 }
 .stepNum{
-  width:28px; height:28px; border-radius:10px;
-  display:flex; align-items:center; justify-content:center;
+  width:28px;
+  height:28px;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
   font-weight:900;
   background: linear-gradient(135deg, rgba(255,45,125,.9), rgba(106,92,255,.9));
 }
@@ -513,7 +580,7 @@ body.captureActive .mobileBar{
   display:block;
 }
 
-/* ---------- MOBILE: NO SCROLLING SCREENS ---------- */
+/* ---------- MOBILE ---------- */
 @media (max-width: 980px){
   .app{ grid-template-columns:1fr; }
   .rail{ display:none; }
@@ -529,9 +596,9 @@ body.captureActive .mobileBar{
   }
 
   .screenCard{
-    width: 100%;
-    height: calc(100vh - 64px - (86px + env(safe-area-inset-bottom)) - 20px);
-    max-height: calc(100vh - 64px - (86px + env(safe-area-inset-bottom)) - 20px);
+    width:100%;
+    height:calc(100vh - 64px - (86px + env(safe-area-inset-bottom)) - 20px);
+    max-height:calc(100vh - 64px - (86px + env(safe-area-inset-bottom)) - 20px);
     display:flex;
     flex-direction:column;
     border-radius:18px;
@@ -541,11 +608,10 @@ body.captureActive .mobileBar{
 
   .screenTitle{ font-size:20px; }
   .screenSub{ font-size:12px; }
-
   .screenHeader{ margin-bottom:10px; }
 
   .modeGrid{
-    grid-template-columns: 1fr;
+    grid-template-columns:1fr;
     gap:10px;
     margin-top:10px;
   }
@@ -577,8 +643,8 @@ body.captureActive .mobileBar{
   .screenActions .btn{ width:100%; min-width:0; }
 
   .booth{
-    width: 100%;
-    height: calc(100vh - 64px - (86px + env(safe-area-inset-bottom)) - 20px);
+    width:100%;
+    height:calc(100vh - 64px - (86px + env(safe-area-inset-bottom)) - 20px);
     border-radius:18px;
   }
 
@@ -607,7 +673,7 @@ body.captureActive .mobileBar{
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
-    max-width: 52vw;
+    max-width:52vw;
   }
   .mobileSub{
     margin-top:2px;
@@ -616,7 +682,7 @@ body.captureActive .mobileBar{
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
-    max-width: 52vw;
+    max-width:52vw;
   }
   .mobileBarRight{
     display:flex;
@@ -633,12 +699,12 @@ body.captureActive .mobileBar{
     align-items:center;
   }
   .modalCard{
-    width: 96vw;
-    height: calc(100vh - 20px - env(safe-area-inset-bottom));
-    max-height: calc(100vh - 20px - env(safe-area-inset-bottom));
+    width:96vw;
+    height:calc(100vh - 20px - env(safe-area-inset-bottom));
+    max-height:calc(100vh - 20px - env(safe-area-inset-bottom));
     display:grid;
-    grid-template-rows: auto 1fr;
-    grid-template-columns: 1fr;
+    grid-template-rows:auto 1fr;
+    grid-template-columns:1fr;
     overflow:hidden;
     border-radius:18px;
   }
@@ -649,8 +715,8 @@ body.captureActive .mobileBar{
   }
   .preview img,
   .preview video{
-    max-height: 26vh;
-    max-width: 92vw;
+    max-height:26vh;
+    max-width:92vw;
   }
   .panel{
     padding:12px;
@@ -663,11 +729,16 @@ body.captureActive .mobileBar{
   .divider{ margin:10px 0; }
 
   .kioskStartScreen{
-    padding:16px;
+    padding:10px;
+  }
+  .kioskStartScreen::before{
+    top:16px;
+    left:16px;
+    font-size:12px;
   }
   .kioskFrameGlow{
     inset:2px;
-    border-radius:22px;
+    border-radius:24px;
     border-width:5px;
   }
   .kioskBrand{
@@ -685,11 +756,9 @@ body.captureActive .mobileBar{
   }
 }
 
-/* ===== Mobile override: hide bottom bar unless on Capture screen ===== */
+/* mobile override: hide bottom bar unless on Capture screen */
 @media (max-width: 980px){
-  .mobileBar{ 
-    display:none !important;
-  }
+  .mobileBar{ display:none !important; }
 
   body.captureActive .mobileBar{
     display:block !important;
@@ -704,22 +773,21 @@ body.captureActive .mobileBar{
   }
 }
 
-/* ===== Mobile: reclaim space when mobile bar is hidden + keep Continue visible ===== */
+/* mobile: reclaim space when bar is hidden + keep Continue visible */
 @media (max-width: 980px){
-
   .stage{
-    padding-bottom: 10px !important;
+    padding-bottom:10px !important;
   }
   body.captureActive .stage{
-    padding-bottom: calc(86px + env(safe-area-inset-bottom)) !important;
+    padding-bottom:calc(86px + env(safe-area-inset-bottom)) !important;
   }
 
   .frameGrid{
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow: auto;
-    -webkit-overflow-scrolling: touch;
-    padding-bottom: 10px;
+    flex:1 1 auto;
+    min-height:0;
+    overflow:auto;
+    -webkit-overflow-scrolling:touch;
+    padding-bottom:10px;
   }
 
   .frameThumb{
