@@ -168,6 +168,125 @@ body{
 .modeName{ font-weight:900; font-size:18px; letter-spacing:.2px; }
 .modeDesc{ margin-top:6px; color:rgba(246,247,255,.68); font-weight:700; font-size:12px; }
 
+/* kiosk start screen */
+.kioskModeCard{
+  position:relative;
+  overflow:hidden;
+}
+
+.kioskStartScreen{
+  position:absolute;
+  inset:0;
+  z-index:50;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:26px;
+  background:
+    radial-gradient(circle at center, rgba(255,45,125,.08) 0%, rgba(255,45,125,.03) 22%, rgba(5,6,11,.90) 62%, rgba(5,6,11,.98) 100%);
+  transition: opacity .4s ease, transform .4s ease, visibility .4s ease;
+}
+
+.kioskStartScreen.hide{
+  opacity:0;
+  transform:scale(1.02);
+  visibility:hidden;
+  pointer-events:none;
+}
+
+.kioskFrameGlow{
+  position:absolute;
+  inset:18px;
+  border-radius:28px;
+  border:6px solid rgba(255,45,125,.95);
+  box-shadow:
+    0 0 10px rgba(255,45,125,.95),
+    0 0 22px rgba(255,45,125,.85),
+    0 0 42px rgba(255,45,125,.65),
+    inset 0 0 10px rgba(255,45,125,.55),
+    inset 0 0 28px rgba(255,45,125,.28);
+  animation:kioskPulse 2.1s ease-in-out infinite;
+  pointer-events:none;
+}
+
+@keyframes kioskPulse{
+  0%,100%{
+    box-shadow:
+      0 0 10px rgba(255,45,125,.95),
+      0 0 22px rgba(255,45,125,.85),
+      0 0 42px rgba(255,45,125,.65),
+      inset 0 0 10px rgba(255,45,125,.55),
+      inset 0 0 28px rgba(255,45,125,.28);
+  }
+  50%{
+    box-shadow:
+      0 0 14px rgba(255,45,125,1),
+      0 0 32px rgba(255,45,125,.95),
+      0 0 60px rgba(255,45,125,.85),
+      inset 0 0 14px rgba(255,45,125,.65),
+      inset 0 0 36px rgba(255,45,125,.32);
+  }
+}
+
+.kioskCenter{
+  position:relative;
+  z-index:2;
+  width:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:18px;
+  text-align:center;
+}
+
+.kioskBrand{
+  font-size:clamp(18px, 2vw, 24px);
+  font-weight:900;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  color:rgba(246,247,255,.82);
+  text-shadow:0 0 16px rgba(255,45,125,.30);
+}
+
+.kioskStartBtn{
+  border:none;
+  min-width:min(560px, 82vw);
+  min-height:120px;
+  padding:24px 34px;
+  border-radius:999px;
+  cursor:pointer;
+  font-size:clamp(28px, 4vw, 44px);
+  font-weight:900;
+  letter-spacing:.4px;
+  color:#fff;
+  background:linear-gradient(135deg, rgba(255,45,125,.98), rgba(255,45,125,.86));
+  box-shadow:
+    0 0 16px rgba(255,45,125,.95),
+    0 0 34px rgba(255,45,125,.75),
+    0 18px 42px rgba(0,0,0,.45);
+  transition:transform .12s ease, box-shadow .14s ease, filter .14s ease;
+}
+
+.kioskStartBtn:hover{
+  transform:scale(1.02);
+  filter:brightness(1.03);
+  box-shadow:
+    0 0 20px rgba(255,45,125,1),
+    0 0 44px rgba(255,45,125,.85),
+    0 20px 48px rgba(0,0,0,.48);
+}
+
+.kioskStartBtn:active{
+  transform:scale(.99);
+}
+
+.kioskHint{
+  font-size:14px;
+  font-weight:700;
+  color:rgba(246,247,255,.70);
+}
+
 /* templates */
 .frameGrid{
   display:grid;
@@ -399,10 +518,8 @@ body.captureActive .mobileBar{
   .app{ grid-template-columns:1fr; }
   .rail{ display:none; }
 
-  /* keep everything inside viewport */
   .stage{
     padding:10px;
-    /* reserve a SMALL bottom bar only */
     padding-bottom: calc(86px + env(safe-area-inset-bottom));
   }
 
@@ -411,7 +528,6 @@ body.captureActive .mobileBar{
     justify-content:stretch;
   }
 
-  /* IMPORTANT: fixed-height card so it never scrolls */
   .screenCard{
     width: 100%;
     height: calc(100vh - 64px - (86px + env(safe-area-inset-bottom)) - 20px);
@@ -420,16 +536,14 @@ body.captureActive .mobileBar{
     flex-direction:column;
     border-radius:18px;
     padding:12px;
-    overflow:hidden; /* NO internal scroll */
+    overflow:hidden;
   }
 
-  /* shrink typography to fit */
   .screenTitle{ font-size:20px; }
   .screenSub{ font-size:12px; }
 
   .screenHeader{ margin-bottom:10px; }
 
-  /* content areas must fit without scrolling */
   .modeGrid{
     grid-template-columns: 1fr;
     gap:10px;
@@ -455,7 +569,6 @@ body.captureActive .mobileBar{
   .step{ padding:10px; border-radius:14px; }
   .stepTxt{ font-size:13px; }
 
-  /* actions always visible */
   .screenActions{
     margin-top:auto;
     padding-top:10px;
@@ -463,14 +576,12 @@ body.captureActive .mobileBar{
   }
   .screenActions .btn{ width:100%; min-width:0; }
 
-  /* capture booth fits */
   .booth{
     width: 100%;
     height: calc(100vh - 64px - (86px + env(safe-area-inset-bottom)) - 20px);
     border-radius:18px;
   }
 
-  /* mobile bar smaller */
   .controlsDesktop{ display:none; }
   .mobileBar{
     display:block;
@@ -516,10 +627,9 @@ body.captureActive .mobileBar{
     padding:12px 14px;
   }
 
-  /* RESULT MODAL: also no scrolling */
   .modal{
     padding:7px;
-    overflow:hidden; /* no page scroll */
+    overflow:hidden;
     align-items:center;
   }
   .modalCard{
@@ -539,19 +649,42 @@ body.captureActive .mobileBar{
   }
   .preview img,
   .preview video{
-    max-height: 26vh;   /* shrink strip/video so panel fits */
+    max-height: 26vh;
     max-width: 92vw;
   }
   .panel{
     padding:12px;
-    overflow:hidden; /* no inner scroll */
+    overflow:hidden;
     display:flex;
     flex-direction:column;
     gap:10px;
   }
   .panel .btn{ width:100%; min-width:0; }
   .divider{ margin:10px 0; }
+
+  .kioskStartScreen{
+    padding:16px;
+  }
+  .kioskFrameGlow{
+    inset:10px;
+    border-radius:22px;
+    border-width:5px;
+  }
+  .kioskBrand{
+    font-size:14px;
+    letter-spacing:1.3px;
+  }
+  .kioskStartBtn{
+    min-width:100%;
+    min-height:96px;
+    font-size:clamp(24px, 7vw, 34px);
+    padding:20px 18px;
+  }
+  .kioskHint{
+    font-size:12px;
+  }
 }
+
 /* ===== Mobile override: hide bottom bar unless on Capture screen ===== */
 @media (max-width: 980px){
   .mobileBar{ 
@@ -562,7 +695,6 @@ body.captureActive .mobileBar{
     display:block !important;
   }
 
-  /* prevent Safari bottom UI from covering the bar */
   body.captureActive{
     padding-bottom: calc(72px + env(safe-area-inset-bottom));
   }
@@ -571,28 +703,26 @@ body.captureActive .mobileBar{
     padding-bottom: env(safe-area-inset-bottom);
   }
 }
+
 /* ===== Mobile: reclaim space when mobile bar is hidden + keep Continue visible ===== */
 @media (max-width: 980px){
 
-  /* 1) Only reserve bottom space when we're actually on capture screen */
   .stage{
-    padding-bottom: 10px !important; /* was always reserving ~86px */
+    padding-bottom: 10px !important;
   }
   body.captureActive .stage{
     padding-bottom: calc(86px + env(safe-area-inset-bottom)) !important;
   }
 
-  /* 2) Let the template grid scroll inside the fixed-height card */
   .frameGrid{
     flex: 1 1 auto;
-    min-height: 0;          /* critical for flex children to scroll */
+    min-height: 0;
     overflow: auto;
     -webkit-overflow-scrolling: touch;
-    padding-bottom: 10px;   /* keeps last row away from buttons */
+    padding-bottom: 10px;
   }
 
-  /* optional: makes tiles shorter so you see more at once */
   .frameThumb{
-    aspect-ratio: 2 / 3;    /* was 3/4 */
+    aspect-ratio: 2 / 3;
   }
 }
