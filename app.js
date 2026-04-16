@@ -72,10 +72,10 @@
 
   // Make sure these file paths exist in your repo.
   const FRAMES = [
-  { name: "classic",    src: "assets/frames/classic.png" },
-  { name: "Lewisville", src: "assets/frames/Lewisville.png" },
-  { name: "LHS",        src: "assets/frames/LHS.png" },
-  { name: "Gathering",  src: "assets/frames/Gathering.png" },
+  { name: "classic",    src: "assets/frames/Frame1.png" },
+  { name: "NexaFlow", src: "assets/frames/Frame2.png" },
+  { name: "Business",        src: "assets/frames/Frame3.png" },
+  { name: "Event",  src: "assets/frames/Frame4.png" },
 ];
 
   // ---------- STATE ----------
@@ -310,9 +310,9 @@
     ctx.fillRect(0, 0, stripW, headerH);
     ctx.fillStyle = "#fff";
     ctx.font = "900 52px Arial";
-    ctx.fillText("THE GATHERING", 28, 68);
+    ctx.fillText("YOUR", 28, 68);
     ctx.font = "900 36px Arial";
-    ctx.fillText("ON SUMMIT • LHS KILLOUGH", 28, 108);
+    ctx.fillText("BUSINESS NAME", 28, 108);
 
     let y = headerH;
     for (let i = 0; i < loaded.length; i++) {
@@ -324,7 +324,7 @@
     ctx.fillRect(0, c.height - footerH, stripW, footerH);
     ctx.fillStyle = "#fff";
     ctx.font = "900 34px Arial";
-    ctx.fillText("GATHERING ON SUMMIT 2026", 28, c.height - 92);
+    ctx.fillText("YOUR EVENT NAME 202X", 28, c.height - 92);
 
     ctx.fillStyle = "rgba(255,255,255,0.75)";
     ctx.font = "700 22px Arial";
