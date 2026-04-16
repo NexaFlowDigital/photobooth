@@ -44,7 +44,19 @@
       <section class="stage">
         <!-- SCREEN: MODE -->
         <section id="screenMode" class="screen show">
-          <div class="screenCard">
+          <div class="screenCard kioskModeCard">
+            <div id="kioskStartScreen" class="kioskStartScreen">
+              <div class="kioskFrameGlow"></div>
+
+              <div class="kioskCenter">
+                <div class="kioskBrand">NexaPhoto Booth</div>
+                <button id="kioskStartBtn" class="kioskStartBtn" type="button">
+                  Press Here to Start
+                </button>
+                <div class="kioskHint">Tap to begin your photo booth experience</div>
+              </div>
+            </div>
+
             <div class="screenHeader">
               <div class="screenTitle">Choose capture mode</div>
               <div class="screenSub">Pick what you want to create.</div>
@@ -183,5 +195,22 @@
 
   <script src="config.js"></script>
   <script src="app.js"></script>
+
+  <script>
+    (function () {
+      const kioskStartBtn = document.getElementById('kioskStartBtn');
+      const kioskStartScreen = document.getElementById('kioskStartScreen');
+
+      if (kioskStartBtn && kioskStartScreen) {
+        kioskStartBtn.addEventListener('click', function () {
+          kioskStartScreen.classList.add('hide');
+
+          setTimeout(function () {
+            kioskStartScreen.style.display = 'none';
+          }, 450);
+        });
+      }
+    })();
+  </script>
 </body>
 </html>
