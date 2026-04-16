@@ -1,3 +1,3 @@
 window.PHOTOBOOTH_CONFIG = {
-  GAS_POST_URL: "https://script.google.com/macros/s/AKfycbxcKS53rVGR8vU8FDyudj9h2u437huHfzqQlc5ijjf5ZEFaRQV7dFNVwgzFJz52vtk7/exec"
+  GAS_POST_URL: "https://script.google.com/macros/s/AKfycbwtHZWEPOMJSj3tI7PwGBjYIH3ChcvksT8DGekqZXXP6cJWZ_SkbZyxfItrGXhxEa5q/exec"
 };
