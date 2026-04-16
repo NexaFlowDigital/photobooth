@@ -72,10 +72,10 @@
 
   // Make sure these file paths exist in your repo.
   const FRAMES = [
-  { name: "classic",    src: "assets/frames/Frame1.png" },
-  { name: "NexaFlow", src: "assets/frames/Frame2.png" },
-  { name: "Business",        src: "assets/frames/Frame3.png" },
-  { name: "Event",  src: "assets/frames/Frame4.png" },
+  { name: "classic",    src: "assets/frames/classic.png" },
+  { name: "NexaFlow", src: "assets/frames/Frame1.png" },
+  { name: "Business",        src: "assets/frames/Frame2.png" },
+  { name: "Event",  src: "assets/frames/Frame3.png" },
 ];
 
   // ---------- STATE ----------
