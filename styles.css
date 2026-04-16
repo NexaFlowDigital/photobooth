@@ -1,3 +1,437 @@
+:root{
+  --bg0:#07070b;
+  --bg1:#0b0c12;
+  --panel:rgba(18,19,28,.88);
+  --panel2:rgba(12,13,20,.92);
+  --line:rgba(255,255,255,.10);
+  --text:#f6f7ff;
+  --muted:rgba(246,247,255,.70);
+
+  --accent1:#ff2d7d;
+  --accent2:#6a5cff;
+  --accent3:#12d6ff;
+
+  --good:#22c55e;
+  --warn:#f59e0b;
+  --bad:#ef4444;
+
+  --frame-home:#ff2d7d;
+  --frame-app:#b34dff;
+  --frame-capture:#12d6ff;
+}
+
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+
+body{
+  margin:0;
+  font-family: Arial, Helvetica, sans-serif;
+  color:var(--text);
+  background:
+    radial-gradient(1200px 700px at 20% -10%, rgba(106,92,255,.25) 0%, rgba(7,7,11,0) 60%),
+    radial-gradient(900px 600px at 110% 20%, rgba(255,45,125,.18) 0%, rgba(7,7,11,0) 60%),
+    radial-gradient(900px 600px at 60% 120%, rgba(18,214,255,.10) 0%, rgba(7,7,11,0) 55%),
+    linear-gradient(180deg, var(--bg1), var(--bg0));
+  overflow:hidden;
+}
+
+.app{
+  height:100%;
+  display:grid;
+  grid-template-columns:280px 1fr;
+}
+
+/* ===== LEFT RAIL ===== */
+.rail{
+  padding:16px;
+  border-right:1px solid var(--line);
+  background: linear-gradient(180deg, rgba(18,19,28,.92), rgba(10,10,14,.92));
+  overflow:auto;
+}
+
+.railBrand{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  margin-bottom:16px;
+}
+
+.railLogo{
+  width:44px;
+  height:44px;
+  border-radius:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:900;
+  letter-spacing:.5px;
+  background: linear-gradient(135deg, var(--accent1), var(--accent2));
+  box-shadow: 0 18px 40px rgba(0,0,0,.55);
+}
+
+.railTitle{
+  font-weight:900;
+  letter-spacing:.4px;
+}
+
+.railSub{
+  font-size:12px;
+  color:var(--muted);
+  margin-top:2px;
+}
+
+.railCard{
+  margin-top:12px;
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:14px;
+  background: rgba(255,255,255,.03);
+}
+
+.railCardTitle{
+  font-weight:900;
+  font-size:12px;
+  letter-spacing:.5px;
+  text-transform:uppercase;
+  color:rgba(246,247,255,.85);
+  margin-bottom:8px;
+}
+
+.railCardText{
+  font-size:12px;
+  color:var(--muted);
+  line-height:1.4;
+  margin:6px 0;
+}
+
+.railFooter{
+  margin-top:18px;
+  font-size:12px;
+  color:rgba(246,247,255,.55);
+}
+
+/* ===== MAIN ===== */
+.main{
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+  position:relative;
+}
+
+.topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 16px;
+  border-bottom:1px solid var(--line);
+  background: rgba(10,10,14,.55);
+  backdrop-filter: blur(10px);
+}
+
+.topTitleMain{
+  font-weight:900;
+  letter-spacing:.9px;
+  font-size:12px;
+  color:rgba(246,247,255,.92);
+}
+
+.topTitleSub{
+  margin-top:2px;
+  font-size:12px;
+  color:rgba(246,247,255,.62);
+}
+
+.statusChip{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 10px;
+  border-radius:999px;
+  border:1px solid var(--line);
+  background: rgba(255,255,255,.03);
+  color:rgba(246,247,255,.75);
+  font-size:12px;
+}
+
+.dot{
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  background:#777;
+}
+
+.dot.ok{ background:var(--good); }
+.dot.warn{ background:var(--warn); }
+.dot.bad{ background:var(--bad); }
+
+.stage{
+  flex:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:16px;
+  min-height:0;
+  position:relative;
+}
+
+/* ===== GENERAL SCREENS ===== */
+.screen{
+  width:100%;
+  height:100%;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+}
+
+.screen.show{
+  display:flex;
+}
+
+.screenCard{
+  width:min(980px, 94vw);
+  border-radius:22px;
+  border:1px solid rgba(255,255,255,.12);
+  background: var(--panel);
+  box-shadow: 0 22px 90px rgba(0,0,0,.60);
+  padding:18px;
+}
+
+.screenHeader{
+  margin-bottom:14px;
+}
+
+.screenTitle{
+  font-weight:900;
+  font-size:26px;
+  letter-spacing:.3px;
+}
+
+.screenSub{
+  margin-top:6px;
+  color:var(--muted);
+  font-weight:700;
+}
+
+.screenActions{
+  margin-top:16px;
+  display:flex;
+  justify-content:flex-end;
+}
+
+.screenActions.split{
+  justify-content:space-between;
+  gap:10px;
+}
+
+/* ===== HOME MODE TILES ===== */
+.modeGrid{
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap:12px;
+  margin-top:14px;
+}
+
+.modeTile{
+  border-radius:18px;
+  padding:16px;
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.03);
+  color:var(--text);
+  cursor:pointer;
+  text-align:left;
+  transition: transform .08s ease, box-shadow .12s ease, border-color .12s ease;
+  min-height:92px;
+}
+
+.modeTile:hover{
+  border-color: rgba(255,255,255,.18);
+}
+
+.modeTile:active{
+  transform: scale(.99);
+}
+
+.modeTile.selected{
+  border-color: rgba(18,214,255,.55);
+  box-shadow: 0 0 0 2px rgba(18,214,255,.25) inset, 0 18px 40px rgba(0,0,0,.45);
+}
+
+.modeName{
+  font-weight:900;
+  font-size:18px;
+  letter-spacing:.2px;
+}
+
+.modeDesc{
+  margin-top:6px;
+  color:rgba(246,247,255,.68);
+  font-weight:700;
+  font-size:12px;
+}
+
+/* ===== HOME KIOSK ===== */
+.kioskModeCard{
+  position:static;
+  overflow:visible;
+  width:100%;
+  height:100%;
+  border:none;
+  background:transparent;
+  box-shadow:none;
+  padding:0;
+}
+
+/* hide regular home UI until start button is pressed */
+.kioskModeCard .screenHeader,
+.kioskModeCard .modeGrid,
+.kioskModeCard .screenActions{
+  opacity:0;
+  pointer-events:none;
+  transition: opacity .25s ease;
+}
+
+.kioskStartScreen{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  background:
+    radial-gradient(circle at center, rgba(255,45,125,.08) 0%, rgba(255,45,125,.03) 20%, rgba(7,7,11,.94) 56%, rgba(7,7,11,.995) 100%);
+  transition: opacity .4s ease, transform .4s ease, visibility .4s ease;
+}
+
+.kioskStartScreen::before{
+  content:"NexaFlow Digital";
+  position:absolute;
+  top:22px;
+  left:26px;
+  z-index:3;
+  font-size:14px;
+  font-weight:900;
+  letter-spacing:1.2px;
+  text-transform:uppercase;
+  color:rgba(246,247,255,.92);
+}
+
+.kioskStartScreen.hide{
+  opacity:0;
+  transform:scale(1.01);
+  visibility:hidden;
+  pointer-events:none;
+}
+
+.kioskFrameGlow{
+  position:absolute;
+  inset:8px;
+  border-radius:34px;
+  border:7px solid rgba(255,45,125,.98);
+  box-shadow:
+    0 0 12px rgba(255,45,125,1),
+    0 0 24px rgba(255,45,125,.95),
+    0 0 52px rgba(255,45,125,.78),
+    0 0 84px rgba(255,45,125,.38),
+    inset 0 0 12px rgba(255,45,125,.72),
+    inset 0 0 30px rgba(255,45,125,.28);
+  animation:kioskPulse 2s ease-in-out infinite;
+  pointer-events:none;
+}
+
+@keyframes kioskPulse{
+  0%,100%{
+    box-shadow:
+      0 0 12px rgba(255,45,125,1),
+      0 0 24px rgba(255,45,125,.95),
+      0 0 52px rgba(255,45,125,.78),
+      0 0 84px rgba(255,45,125,.38),
+      inset 0 0 12px rgba(255,45,125,.72),
+      inset 0 0 30px rgba(255,45,125,.28);
+  }
+  50%{
+    box-shadow:
+      0 0 16px rgba(255,45,125,1),
+      0 0 34px rgba(255,45,125,1),
+      0 0 66px rgba(255,45,125,.9),
+      0 0 100px rgba(255,45,125,.48),
+      inset 0 0 16px rgba(255,45,125,.82),
+      inset 0 0 38px rgba(255,45,125,.34);
+  }
+}
+
+.kioskCenter{
+  position:relative;
+  z-index:2;
+  width:100%;
+  max-width:980px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:20px;
+  text-align:center;
+}
+
+.kioskBrand{
+  font-size:clamp(18px, 2vw, 26px);
+  font-weight:900;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  color:rgba(246,247,255,.86);
+  text-shadow:
+    0 0 10px rgba(255,45,125,.22),
+    0 0 24px rgba(255,45,125,.18);
+}
+
+.kioskStartBtn{
+  border:none;
+  min-width:min(620px, 82vw);
+  min-height:126px;
+  padding:24px 34px;
+  border-radius:999px;
+  cursor:pointer;
+  font-size:clamp(28px, 4vw, 46px);
+  font-weight:900;
+  letter-spacing:.4px;
+  color:#fff;
+  background:linear-gradient(135deg, rgba(255,45,125,.99), rgba(255,45,125,.88));
+  box-shadow:
+    0 0 16px rgba(255,45,125,.95),
+    0 0 38px rgba(255,45,125,.8),
+    0 20px 52px rgba(0,0,0,.52);
+  transition:transform .12s ease, box-shadow .14s ease, filter .14s ease;
+}
+
+.kioskStartBtn:hover{
+  transform:scale(1.02);
+  filter:brightness(1.04);
+  box-shadow:
+    0 0 20px rgba(255,45,125,1),
+    0 0 48px rgba(255,45,125,.92),
+    0 24px 56px rgba(0,0,0,.56);
+}
+
+.kioskStartBtn:active{
+  transform:scale(.99);
+}
+
+.kioskHint{
+  font-size:14px;
+  font-weight:700;
+  color:rgba(246,247,255,.70);
+}
+
+/* reveal normal home UI after overlay hides */
+.kioskStartScreen.hide ~ .screenHeader,
+.kioskStartScreen.hide ~ .modeGrid,
+.kioskStartScreen.hide ~ .screenActions{
+  opacity:1;
+  pointer-events:auto;
+}
+
 /* ===== CLEAN APP MODE FOR ALL NON-HOME SCREENS ===== */
 
 /* force full app width when not on home */
@@ -300,7 +734,7 @@ video{
   opacity:1;
 }
 
-/* capture buttons stay visible */
+/* ===== BUTTONS ===== */
 .controls{
   display:flex;
   gap:12px;
@@ -309,6 +743,40 @@ video{
   position:relative;
   z-index:2;
   min-height:56px;
+}
+
+.btn{
+  border:none;
+  border-radius:16px;
+  padding:10px 14px;
+  font-size:13px;
+  font-weight:900;
+  cursor:pointer;
+  min-width:170px;
+}
+
+.btn:disabled{
+  opacity:.5;
+  cursor:not-allowed;
+}
+
+.btn.primary{
+  color:#fff;
+  background: linear-gradient(135deg, var(--accent1), var(--accent2));
+  box-shadow: 0 16px 40px rgba(255,45,125,.16);
+}
+
+.btn.secondary{
+  background: rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.12);
+  color:var(--text);
+  min-width:140px;
+}
+
+.btn.small{
+  min-width:0;
+  padding:12px 14px;
+  font-size:14px;
 }
 
 /* ===== RESULT MODAL ===== */
@@ -414,6 +882,15 @@ video{
   font-size:12px;
   color:var(--muted);
   line-height:1.35;
+}
+
+/* ===== MOBILE BAR ===== */
+.mobileBar{
+  display:none;
+}
+
+body.captureActive .mobileBar{
+  display:block;
 }
 
 /* ===== MOBILE ===== */
