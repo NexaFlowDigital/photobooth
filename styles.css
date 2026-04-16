@@ -574,12 +574,16 @@ body:has(#screenCapture.show) .stage{
   z-index:1;
 }
 
-video{
+#video{
   width:100%;
   height:100%;
   object-fit:cover;
   transform: scaleX(-1);
   background:#000;
+}
+
+#animPreview{
+  transform:none;
 }
 
 .overlay{
