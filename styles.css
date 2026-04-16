@@ -14,10 +14,6 @@
   --good:#22c55e;
   --warn:#f59e0b;
   --bad:#ef4444;
-
-  --frame-home:#ff2d7d;
-  --frame-app:#b34dff;
-  --frame-capture:#12d6ff;
 }
 
 *{ box-sizing:border-box; }
@@ -37,77 +33,12 @@ body{
 
 .app{
   height:100%;
-  display:grid;
-  grid-template-columns:280px 1fr;
+  display:block;
 }
 
-/* ===== LEFT RAIL ===== */
+/* ===== REMOVE RAIL COMPLETELY ===== */
 .rail{
-  padding:16px;
-  border-right:1px solid var(--line);
-  background: linear-gradient(180deg, rgba(18,19,28,.92), rgba(10,10,14,.92));
-  overflow:auto;
-}
-
-.railBrand{
-  display:flex;
-  gap:12px;
-  align-items:center;
-  margin-bottom:16px;
-}
-
-.railLogo{
-  width:44px;
-  height:44px;
-  border-radius:14px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:900;
-  letter-spacing:.5px;
-  background: linear-gradient(135deg, var(--accent1), var(--accent2));
-  box-shadow: 0 18px 40px rgba(0,0,0,.55);
-}
-
-.railTitle{
-  font-weight:900;
-  letter-spacing:.4px;
-}
-
-.railSub{
-  font-size:12px;
-  color:var(--muted);
-  margin-top:2px;
-}
-
-.railCard{
-  margin-top:12px;
-  border:1px solid var(--line);
-  border-radius:18px;
-  padding:14px;
-  background: rgba(255,255,255,.03);
-}
-
-.railCardTitle{
-  font-weight:900;
-  font-size:12px;
-  letter-spacing:.5px;
-  text-transform:uppercase;
-  color:rgba(246,247,255,.85);
-  margin-bottom:8px;
-}
-
-.railCardText{
-  font-size:12px;
-  color:var(--muted);
-  line-height:1.4;
-  margin:6px 0;
-}
-
-.railFooter{
-  margin-top:18px;
-  font-size:12px;
-  color:rgba(246,247,255,.55);
+  display:none !important;
 }
 
 /* ===== MAIN ===== */
@@ -127,6 +58,9 @@ body{
   border-bottom:1px solid var(--line);
   background: rgba(10,10,14,.55);
   backdrop-filter: blur(10px);
+  flex:0 0 auto;
+  position:relative;
+  z-index:20;
 }
 
 .topTitleMain{
@@ -160,7 +94,6 @@ body{
   border-radius:50%;
   background:#777;
 }
-
 .dot.ok{ background:var(--good); }
 .dot.warn{ background:var(--warn); }
 .dot.bad{ background:var(--bad); }
@@ -283,7 +216,6 @@ body{
   padding:0;
 }
 
-/* hide regular home UI until start button is pressed */
 .kioskModeCard .screenHeader,
 .kioskModeCard .modeGrid,
 .kioskModeCard .screenActions{
@@ -424,7 +356,6 @@ body{
   color:rgba(246,247,255,.70);
 }
 
-/* reveal normal home UI after overlay hides */
 .kioskStartScreen.hide ~ .screenHeader,
 .kioskStartScreen.hide ~ .modeGrid,
 .kioskStartScreen.hide ~ .screenActions{
@@ -432,31 +363,11 @@ body{
   pointer-events:auto;
 }
 
-/* ===== CLEAN APP MODE FOR ALL NON-HOME SCREENS ===== */
-
-/* force full app width when not on home */
-body:has(#screenTemplate.show) .app,
-body:has(#screenInstructions.show) .app,
-body:has(#screenCapture.show) .app{
-  grid-template-columns:1fr !important;
-}
-
-/* hard-hide left rail and top bar */
-body:has(#screenTemplate.show) .rail,
-body:has(#screenInstructions.show) .rail,
-body:has(#screenCapture.show) .rail,
+/* ===== NON-HOME SCREENS ===== */
 body:has(#screenTemplate.show) .topbar,
 body:has(#screenInstructions.show) .topbar,
 body:has(#screenCapture.show) .topbar{
   display:none !important;
-}
-
-/* main area should use full screen */
-body:has(#screenTemplate.show) .main,
-body:has(#screenInstructions.show) .main,
-body:has(#screenCapture.show) .main{
-  width:100vw;
-  height:100vh;
 }
 
 body:has(#screenTemplate.show) .stage,
@@ -467,7 +378,6 @@ body:has(#screenCapture.show) .stage{
   height:100%;
 }
 
-/* full screen shell */
 #screenTemplate,
 #screenInstructions,
 #screenCapture{
@@ -478,7 +388,7 @@ body:has(#screenCapture.show) .stage{
   padding:0;
 }
 
-/* template + instructions screens */
+/* template + instructions */
 #screenTemplate .screenCard,
 #screenInstructions .screenCard{
   width:100%;
@@ -529,7 +439,7 @@ body:has(#screenCapture.show) .stage{
   font-size:14px;
 }
 
-/* ===== TEMPLATE FRAMES ===== */
+/* frames */
 .frameGrid{
   display:grid;
   grid-template-columns: repeat(4, 1fr);
@@ -585,7 +495,7 @@ body:has(#screenCapture.show) .stage{
   color:rgba(246,247,255,.88);
 }
 
-/* ===== INSTRUCTIONS ===== */
+/* instructions */
 .steps{
   margin-top:12px;
   display:grid;
@@ -621,7 +531,7 @@ body:has(#screenCapture.show) .stage{
   color:rgba(246,247,255,.86);
 }
 
-/* ===== CAPTURE SCREEN ===== */
+/* ===== CAPTURE ===== */
 .boothShell{
   width:100%;
   height:100%;
@@ -734,7 +644,7 @@ video{
   opacity:1;
 }
 
-/* ===== BUTTONS ===== */
+/* buttons */
 .controls{
   display:flex;
   gap:12px;
@@ -743,6 +653,10 @@ video{
   position:relative;
   z-index:2;
   min-height:56px;
+}
+
+.controlsDesktop{
+  display:flex;
 }
 
 .btn{
@@ -886,26 +800,17 @@ video{
 
 /* ===== MOBILE BAR ===== */
 .mobileBar{
-  display:none;
-}
-
-body.captureActive .mobileBar{
-  display:block;
+  display:none !important;
 }
 
 /* ===== MOBILE ===== */
 @media (max-width:980px){
-  .app{
-    grid-template-columns:1fr;
-  }
-
-  .rail{
-    display:none !important;
+  .topbar{
+    display:flex;
   }
 
   .stage{
     padding:10px;
-    padding-bottom: calc(86px + env(safe-area-inset-bottom));
   }
 
   .screen{
@@ -915,8 +820,8 @@ body.captureActive .mobileBar{
 
   .screenCard{
     width:100%;
-    height:calc(100vh - 64px - (86px + env(safe-area-inset-bottom)) - 20px);
-    max-height:calc(100vh - 64px - (86px + env(safe-area-inset-bottom)) - 20px);
+    height:calc(100vh - 64px - 20px);
+    max-height:calc(100vh - 64px - 20px);
     display:flex;
     flex-direction:column;
     border-radius:18px;
@@ -988,11 +893,15 @@ body.captureActive .mobileBar{
   }
 
   .controlsDesktop{
-    display:none;
+    display:none !important;
   }
 
   .mobileBar{
-    display:block;
+    display:none !important;
+  }
+
+  body.captureActive .mobileBar{
+    display:block !important;
     position:fixed;
     left:0;
     right:0;
@@ -1165,21 +1074,9 @@ body.captureActive .mobileBar{
   }
 }
 
-/* ===== MOBILE OVERRIDE ===== */
-@media (max-width:980px){
-  .mobileBar{
-    display:none !important;
-  }
-
-  body.captureActive .mobileBar{
-    display:block !important;
-  }
-
-  body.captureActive{
-    padding-bottom: calc(72px + env(safe-area-inset-bottom));
-  }
-
-  body.captureActive .mobileBar{
-    padding-bottom: env(safe-area-inset-bottom);
-  }
+/* ===== NON-HOME TOPBAR HIDE ===== */
+body:has(#screenTemplate.show) .topbar,
+body:has(#screenInstructions.show) .topbar,
+body:has(#screenCapture.show) .topbar{
+  display:none !important;
 }
