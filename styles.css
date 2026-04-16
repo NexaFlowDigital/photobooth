@@ -14,10 +14,15 @@
   --good:#22c55e;
   --warn:#f59e0b;
   --bad:#ef4444;
+
+  --frame-home:#ff2d7d;
+  --frame-app:#b34dff;
+  --frame-capture:#12d6ff;
 }
 
 *{ box-sizing:border-box; }
 html,body{ height:100%; }
+
 body{
   margin:0;
   font-family: Arial, Helvetica, sans-serif;
@@ -33,32 +38,47 @@ body{
 .app{
   height:100%;
   display:grid;
-  grid-template-columns: 280px 1fr;
+  grid-template-columns:280px 1fr;
 }
 
+/* ===== LEFT RAIL ===== */
 .rail{
   padding:16px;
   border-right:1px solid var(--line);
   background: linear-gradient(180deg, rgba(18,19,28,.92), rgba(10,10,14,.92));
   overflow:auto;
 }
+
 .railBrand{
   display:flex;
   gap:12px;
   align-items:center;
   margin-bottom:16px;
 }
+
 .railLogo{
-  width:44px;height:44px;
+  width:44px;
+  height:44px;
   border-radius:14px;
-  display:flex;align-items:center;justify-content:center;
+  display:flex;
+  align-items:center;
+  justify-content:center;
   font-weight:900;
   letter-spacing:.5px;
   background: linear-gradient(135deg, var(--accent1), var(--accent2));
   box-shadow: 0 18px 40px rgba(0,0,0,.55);
 }
-.railTitle{ font-weight:900; letter-spacing:.4px; }
-.railSub{ font-size:12px; color:var(--muted); margin-top:2px; }
+
+.railTitle{
+  font-weight:900;
+  letter-spacing:.4px;
+}
+
+.railSub{
+  font-size:12px;
+  color:var(--muted);
+  margin-top:2px;
+}
 
 .railCard{
   margin-top:12px;
@@ -67,6 +87,7 @@ body{
   padding:14px;
   background: rgba(255,255,255,.03);
 }
+
 .railCardTitle{
   font-weight:900;
   font-size:12px;
@@ -75,9 +96,21 @@ body{
   color:rgba(246,247,255,.85);
   margin-bottom:8px;
 }
-.railCardText{ font-size:12px; color:var(--muted); line-height:1.4; margin:6px 0; }
-.railFooter{ margin-top:18px; font-size:12px; color:rgba(246,247,255,.55); }
 
+.railCardText{
+  font-size:12px;
+  color:var(--muted);
+  line-height:1.4;
+  margin:6px 0;
+}
+
+.railFooter{
+  margin-top:18px;
+  font-size:12px;
+  color:rgba(246,247,255,.55);
+}
+
+/* ===== MAIN ===== */
 .main{
   height:100%;
   display:flex;
@@ -95,8 +128,19 @@ body{
   background: rgba(10,10,14,.55);
   backdrop-filter: blur(10px);
 }
-.topTitleMain{ font-weight:900; letter-spacing:.9px; font-size:12px; color:rgba(246,247,255,.92); }
-.topTitleSub{ margin-top:2px; font-size:12px; color:rgba(246,247,255,.62); }
+
+.topTitleMain{
+  font-weight:900;
+  letter-spacing:.9px;
+  font-size:12px;
+  color:rgba(246,247,255,.92);
+}
+
+.topTitleSub{
+  margin-top:2px;
+  font-size:12px;
+  color:rgba(246,247,255,.62);
+}
 
 .statusChip{
   display:flex;
@@ -109,7 +153,14 @@ body{
   color:rgba(246,247,255,.75);
   font-size:12px;
 }
-.dot{ width:10px; height:10px; border-radius:50%; background:#777; }
+
+.dot{
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  background:#777;
+}
+
 .dot.ok{ background:var(--good); }
 .dot.warn{ background:var(--warn); }
 .dot.bad{ background:var(--bad); }
@@ -124,7 +175,7 @@ body{
   position:relative;
 }
 
-/* screens */
+/* ===== GENERAL SCREENS ===== */
 .screen{
   width:100%;
   height:100%;
@@ -133,7 +184,10 @@ body{
   justify-content:center;
   position:relative;
 }
-.screen.show{ display:flex; }
+
+.screen.show{
+  display:flex;
+}
 
 .screenCard{
   width:min(980px, 94vw);
@@ -144,19 +198,41 @@ body{
   padding:18px;
 }
 
-.screenHeader{ margin-bottom:14px; }
-.screenTitle{ font-weight:900; font-size:26px; letter-spacing:.3px; }
-.screenSub{ margin-top:6px; color:var(--muted); font-weight:700; }
+.screenHeader{
+  margin-bottom:14px;
+}
 
-.screenActions{ margin-top:16px; display:flex; justify-content:flex-end; }
-.screenActions.split{ justify-content:space-between; gap:10px; }
+.screenTitle{
+  font-weight:900;
+  font-size:26px;
+  letter-spacing:.3px;
+}
 
+.screenSub{
+  margin-top:6px;
+  color:var(--muted);
+  font-weight:700;
+}
+
+.screenActions{
+  margin-top:16px;
+  display:flex;
+  justify-content:flex-end;
+}
+
+.screenActions.split{
+  justify-content:space-between;
+  gap:10px;
+}
+
+/* ===== HOME MODE TILES ===== */
 .modeGrid{
   display:grid;
   grid-template-columns: repeat(3, 1fr);
   gap:12px;
   margin-top:14px;
 }
+
 .modeTile{
   border-radius:18px;
   padding:16px;
@@ -168,16 +244,34 @@ body{
   transition: transform .08s ease, box-shadow .12s ease, border-color .12s ease;
   min-height:92px;
 }
-.modeTile:hover{ border-color: rgba(255,255,255,.18); }
-.modeTile:active{ transform: scale(.99); }
+
+.modeTile:hover{
+  border-color: rgba(255,255,255,.18);
+}
+
+.modeTile:active{
+  transform: scale(.99);
+}
+
 .modeTile.selected{
   border-color: rgba(18,214,255,.55);
   box-shadow: 0 0 0 2px rgba(18,214,255,.25) inset, 0 18px 40px rgba(0,0,0,.45);
 }
-.modeName{ font-weight:900; font-size:18px; letter-spacing:.2px; }
-.modeDesc{ margin-top:6px; color:rgba(246,247,255,.68); font-weight:700; font-size:12px; }
 
-/* ===== KIOSK START SCREEN ===== */
+.modeName{
+  font-weight:900;
+  font-size:18px;
+  letter-spacing:.2px;
+}
+
+.modeDesc{
+  margin-top:6px;
+  color:rgba(246,247,255,.68);
+  font-weight:700;
+  font-size:12px;
+}
+
+/* ===== HOME KIOSK ===== */
 .kioskModeCard{
   position:static;
   overflow:visible;
@@ -189,15 +283,15 @@ body{
   padding:0;
 }
 
-/* hide the regular mode screen UI until the overlay is dismissed */
+/* hide regular home UI until start button is pressed */
 .kioskModeCard .screenHeader,
 .kioskModeCard .modeGrid,
 .kioskModeCard .screenActions{
   opacity:0;
   pointer-events:none;
+  transition: opacity .25s ease;
 }
 
-/* full-app overlay */
 .kioskStartScreen{
   position:fixed;
   inset:0;
@@ -211,7 +305,6 @@ body{
   transition: opacity .4s ease, transform .4s ease, visibility .4s ease;
 }
 
-/* top-left brand inside kiosk */
 .kioskStartScreen::before{
   content:"NexaFlow Digital";
   position:absolute;
@@ -225,13 +318,6 @@ body{
   color:rgba(246,247,255,.92);
 }
 
-/* hide normal app chrome visually while kiosk is active */
-.kioskStartScreen ~ .screenHeader,
-.kioskStartScreen ~ .modeGrid,
-.kioskStartScreen ~ .screenActions{
-  opacity:0;
-}
-
 .kioskStartScreen.hide{
   opacity:0;
   transform:scale(1.01);
@@ -239,7 +325,6 @@ body{
   pointer-events:none;
 }
 
-/* this is the actual border */
 .kioskFrameGlow{
   position:absolute;
   inset:8px;
@@ -339,8 +424,7 @@ body{
   color:rgba(246,247,255,.70);
 }
 
-/* after overlay is hidden, bring back the mode content */
-.kioskStartScreen.hide + .screenHeader,
+/* reveal normal home UI after overlay hides */
 .kioskStartScreen.hide ~ .screenHeader,
 .kioskStartScreen.hide ~ .modeGrid,
 .kioskStartScreen.hide ~ .screenActions{
@@ -348,13 +432,101 @@ body{
   pointer-events:auto;
 }
 
-/* templates */
+/* ===== CLEAN APP MODE FOR ALL OTHER SCREENS ===== */
+/* hides left rail + top bar when not on the home screen */
+body:has(#screenTemplate.show) .app,
+body:has(#screenInstructions.show) .app,
+body:has(#screenCapture.show) .app{
+  grid-template-columns:1fr;
+}
+
+body:has(#screenTemplate.show) .rail,
+body:has(#screenInstructions.show) .rail,
+body:has(#screenCapture.show) .rail,
+body:has(#screenTemplate.show) .topbar,
+body:has(#screenInstructions.show) .topbar,
+body:has(#screenCapture.show) .topbar{
+  display:none;
+}
+
+/* use the whole screen for remaining app pages */
+body:has(#screenTemplate.show) .stage,
+body:has(#screenInstructions.show) .stage,
+body:has(#screenCapture.show) .stage{
+  padding:0;
+}
+
+/* full framed app screen shell */
+#screenTemplate,
+#screenInstructions,
+#screenCapture{
+  width:100%;
+  height:100%;
+  align-items:stretch;
+  justify-content:stretch;
+  padding:0;
+}
+
+#screenTemplate .screenCard,
+#screenInstructions .screenCard{
+  width:100%;
+  height:100%;
+  border:none;
+  border-radius:0;
+  box-shadow:none;
+  background:
+    radial-gradient(circle at center, rgba(179,77,255,.05) 0%, rgba(7,7,11,.94) 55%, rgba(7,7,11,.995) 100%);
+  padding:36px 36px 28px;
+  display:flex;
+  flex-direction:column;
+  position:relative;
+  overflow:hidden;
+}
+
+#screenTemplate .screenCard::before,
+#screenInstructions .screenCard::before{
+  content:"";
+  position:absolute;
+  inset:8px;
+  border-radius:32px;
+  border:6px solid rgba(179,77,255,.96);
+  box-shadow:
+    0 0 10px rgba(179,77,255,.98),
+    0 0 24px rgba(179,77,255,.85),
+    0 0 52px rgba(179,77,255,.42),
+    inset 0 0 10px rgba(179,77,255,.55),
+    inset 0 0 24px rgba(179,77,255,.20);
+  pointer-events:none;
+}
+
+#screenTemplate .screenHeader,
+#screenInstructions .screenHeader,
+#screenTemplate .screenActions,
+#screenInstructions .screenActions{
+  position:relative;
+  z-index:2;
+}
+
+#screenTemplate .screenTitle,
+#screenInstructions .screenTitle{
+  font-size:34px;
+}
+
+#screenTemplate .screenSub,
+#screenInstructions .screenSub{
+  font-size:14px;
+}
+
+/* ===== TEMPLATE FRAMES ===== */
 .frameGrid{
   display:grid;
   grid-template-columns: repeat(4, 1fr);
-  gap:12px;
-  margin-top:10px;
+  gap:16px;
+  margin-top:14px;
+  position:relative;
+  z-index:2;
 }
+
 .frameCard{
   border:1px solid rgba(255,255,255,.12);
   background: rgba(255,255,255,.03);
@@ -364,11 +536,16 @@ body{
   user-select:none;
   transition: transform .08s ease, box-shadow .10s ease, border-color .10s ease;
 }
-.frameCard:active{ transform: scale(.99); }
+
+.frameCard:active{
+  transform: scale(.99);
+}
+
 .frameCard.selected{
   border-color: rgba(255,45,125,.70);
   box-shadow: 0 0 0 2px rgba(255,45,125,.22) inset;
 }
+
 .frameThumb{
   width:100%;
   aspect-ratio: 3/4;
@@ -377,11 +554,30 @@ body{
   background:#07070b;
   border:1px solid rgba(255,255,255,.08);
 }
-.frameThumb img{ width:100%; height:100%; object-fit:cover; display:block; }
-.frameName{ margin-top:8px; font-size:12px; font-weight:900; color:rgba(246,247,255,.88); }
 
-/* instruction steps */
-.steps{ margin-top:10px; display:grid; gap:10px; }
+.frameThumb img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+
+.frameName{
+  margin-top:8px;
+  font-size:12px;
+  font-weight:900;
+  color:rgba(246,247,255,.88);
+}
+
+/* ===== INSTRUCTIONS ===== */
+.steps{
+  margin-top:12px;
+  display:grid;
+  gap:12px;
+  position:relative;
+  z-index:2;
+}
+
 .step{
   display:flex;
   gap:10px;
@@ -389,11 +585,12 @@ body{
   border:1px solid rgba(255,255,255,.10);
   background: rgba(255,255,255,.03);
   border-radius:16px;
-  padding:12px;
+  padding:14px;
 }
+
 .stepNum{
-  width:28px;
-  height:28px;
+  width:30px;
+  height:30px;
   border-radius:10px;
   display:flex;
   align-items:center;
@@ -401,9 +598,13 @@ body{
   font-weight:900;
   background: linear-gradient(135deg, rgba(255,45,125,.9), rgba(106,92,255,.9));
 }
-.stepTxt{ font-weight:800; color:rgba(246,247,255,.86); }
 
-/* booth */
+.stepTxt{
+  font-weight:800;
+  color:rgba(246,247,255,.86);
+}
+
+/* ===== CAPTURE SCREEN ===== */
 .boothShell{
   width:100%;
   height:100%;
@@ -411,19 +612,40 @@ body{
   flex-direction:column;
   align-items:center;
   justify-content:center;
-  gap:14px;
+  gap:12px;
   min-height:0;
+  position:relative;
+  padding:10px;
+  background:
+    radial-gradient(circle at center, rgba(18,214,255,.05) 0%, rgba(7,7,11,.94) 55%, rgba(7,7,11,.995) 100%);
+}
+
+.boothShell::before{
+  content:"";
+  position:absolute;
+  inset:8px;
+  border-radius:32px;
+  border:6px solid rgba(18,214,255,.96);
+  box-shadow:
+    0 0 10px rgba(18,214,255,.98),
+    0 0 24px rgba(18,214,255,.82),
+    0 0 52px rgba(18,214,255,.36),
+    inset 0 0 10px rgba(18,214,255,.55),
+    inset 0 0 24px rgba(18,214,255,.18);
+  pointer-events:none;
+  z-index:0;
 }
 
 .booth{
   position:relative;
-  width:min(1100px, 96vw);
-  height:min(740px, 76vh);
-  border-radius:22px;
+  width:min(1400px, calc(100vw - 28px));
+  height:min(900px, calc(100vh - 44px));
+  border-radius:28px;
   overflow:hidden;
-  border:1px solid rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.10);
   background:#000;
   box-shadow: 0 26px 110px rgba(0,0,0,.70);
+  z-index:1;
 }
 
 video{
@@ -433,23 +655,50 @@ video{
   transform: scaleX(-1);
   background:#000;
 }
-.overlay{ position:absolute; inset:0; pointer-events:none; z-index:3; }
-.overlay img{ width:100%; height:100%; object-fit:cover; opacity:.98; }
 
-.flash{ position:absolute; inset:0; background:#fff; opacity:0; pointer-events:none; z-index:6; }
-.countdown{
-  position:absolute; inset:0;
-  display:flex; align-items:center; justify-content:center;
-  font-size:140px; font-weight:900;
-  text-shadow: 0 10px 50px rgba(0,0,0,.75);
-  opacity:0; pointer-events:none; z-index:7;
+.overlay{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  z-index:3;
 }
+
+.overlay img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  opacity:.98;
+}
+
+.flash{
+  position:absolute;
+  inset:0;
+  background:#fff;
+  opacity:0;
+  pointer-events:none;
+  z-index:6;
+}
+
+.countdown{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:140px;
+  font-weight:900;
+  text-shadow: 0 10px 50px rgba(0,0,0,.75);
+  opacity:0;
+  pointer-events:none;
+  z-index:7;
+}
+
 .prompt{
   position:absolute;
   left:50%;
-  top:16px;
+  top:18px;
   transform:translateX(-50%);
-  padding:10px 14px;
+  padding:12px 16px;
   border-radius:999px;
   background: rgba(0,0,0,.55);
   border:1px solid rgba(255,255,255,.14);
@@ -464,15 +713,21 @@ video{
   overflow:hidden;
   text-overflow:ellipsis;
 }
-.prompt.show{ opacity:1; }
 
-/* buttons */
+.prompt.show{
+  opacity:1;
+}
+
+/* ===== BUTTONS ===== */
 .controls{
   display:flex;
   gap:12px;
   justify-content:center;
   align-items:center;
+  position:relative;
+  z-index:2;
 }
+
 .btn{
   border:none;
   border-radius:16px;
@@ -482,28 +737,35 @@ video{
   cursor:pointer;
   min-width:170px;
 }
-.btn:disabled{ opacity:.5; cursor:not-allowed; }
+
+.btn:disabled{
+  opacity:.5;
+  cursor:not-allowed;
+}
 
 .btn.primary{
   color:#fff;
   background: linear-gradient(135deg, var(--accent1), var(--accent2));
   box-shadow: 0 16px 40px rgba(255,45,125,.16);
 }
+
 .btn.secondary{
   background: rgba(255,255,255,.06);
-  border: 1px solid rgba(255,255,255,.12);
-  color: var(--text);
+  border:1px solid rgba(255,255,255,.12);
+  color:var(--text);
   min-width:140px;
 }
+
 .btn.small{
   min-width:0;
   padding:12px 14px;
   font-size:14px;
 }
 
-/* modal */
+/* ===== RESULT MODAL ===== */
 .modal{
-  position:absolute; inset:0;
+  position:absolute;
+  inset:0;
   display:none;
   align-items:center;
   justify-content:center;
@@ -512,8 +774,9 @@ video{
   backdrop-filter: blur(12px);
   z-index:200;
 }
+
 .modalCard{
-  width:min(1100px, 96vw);
+  width:min(1200px, 96vw);
   max-height:92vh;
   overflow:hidden;
   background: rgba(18,19,28,.96);
@@ -522,6 +785,7 @@ video{
   display:grid;
   grid-template-columns: 1fr 400px;
 }
+
 .preview{
   background: rgba(10,10,14,.85);
   border-right:1px solid rgba(255,255,255,.08);
@@ -531,6 +795,7 @@ video{
   justify-content:center;
   overflow:hidden;
 }
+
 .preview img,
 .preview video{
   display:none;
@@ -542,14 +807,34 @@ video{
   border:1px solid rgba(255,255,255,.12);
   background:#000;
 }
+
 .preview img.show,
-.preview video.show{ display:block; }
+.preview video.show{
+  display:block;
+}
 
-.panel{ padding:16px; overflow:hidden; }
-.panelTitle{ font-size:18px; font-weight:900; margin-bottom:6px; }
-.panelSub{ font-size:12px; color:var(--muted); margin-bottom:12px; }
+.panel{
+  padding:16px;
+  overflow:hidden;
+}
 
-.divider{ height:1px; background: rgba(255,255,255,.10); margin:14px 0; }
+.panelTitle{
+  font-size:18px;
+  font-weight:900;
+  margin-bottom:6px;
+}
+
+.panelSub{
+  font-size:12px;
+  color:var(--muted);
+  margin-bottom:12px;
+}
+
+.divider{
+  height:1px;
+  background: rgba(255,255,255,.10);
+  margin:14px 0;
+}
 
 .label{
   display:block;
@@ -567,23 +852,36 @@ video{
   border-radius:14px;
   border:1px solid rgba(255,255,255,.12);
   background: rgba(255,255,255,.06);
-  color: var(--text);
+  color:var(--text);
   font-size:16px;
   outline:none;
 }
-.tinyNote{ margin-top:10px; font-size:12px; color:var(--muted); line-height:1.35; }
 
-/* mobile bar is ONLY visible during capture screen */
-.mobileBar{ display:none; }
+.tinyNote{
+  margin-top:10px;
+  font-size:12px;
+  color:var(--muted);
+  line-height:1.35;
+}
+
+/* ===== MOBILE BAR ===== */
+.mobileBar{
+  display:none;
+}
 
 body.captureActive .mobileBar{
   display:block;
 }
 
-/* ---------- MOBILE ---------- */
-@media (max-width: 980px){
-  .app{ grid-template-columns:1fr; }
-  .rail{ display:none; }
+/* ===== MOBILE ===== */
+@media (max-width:980px){
+  .app{
+    grid-template-columns:1fr;
+  }
+
+  .rail{
+    display:none;
+  }
 
   .stage{
     padding:10px;
@@ -606,65 +904,106 @@ body.captureActive .mobileBar{
     overflow:hidden;
   }
 
-  .screenTitle{ font-size:20px; }
-  .screenSub{ font-size:12px; }
-  .screenHeader{ margin-bottom:10px; }
+  .screenTitle{
+    font-size:20px;
+  }
+
+  .screenSub{
+    font-size:12px;
+  }
+
+  .screenHeader{
+    margin-bottom:10px;
+  }
 
   .modeGrid{
     grid-template-columns:1fr;
     gap:10px;
     margin-top:10px;
   }
+
   .modeTile{
     min-height:72px;
     padding:12px;
   }
-  .modeName{ font-size:16px; }
-  .modeDesc{ font-size:12px; }
+
+  .modeName{
+    font-size:16px;
+  }
+
+  .modeDesc{
+    font-size:12px;
+  }
 
   .frameGrid{
     grid-template-columns: repeat(2, 1fr);
     gap:10px;
     margin-top:8px;
   }
-  .frameCard{ padding:8px; border-radius:16px; }
-  .frameThumb{ border-radius:12px; }
-  .frameName{ margin-top:6px; font-size:12px; }
 
-  .steps{ gap:8px; margin-top:8px; }
-  .step{ padding:10px; border-radius:14px; }
-  .stepTxt{ font-size:13px; }
+  .frameCard{
+    padding:8px;
+    border-radius:16px;
+  }
+
+  .frameThumb{
+    border-radius:12px;
+  }
+
+  .frameName{
+    margin-top:6px;
+    font-size:12px;
+  }
+
+  .steps{
+    gap:8px;
+    margin-top:8px;
+  }
+
+  .step{
+    padding:10px;
+    border-radius:14px;
+  }
+
+  .stepTxt{
+    font-size:13px;
+  }
 
   .screenActions{
     margin-top:auto;
     padding-top:10px;
     border-top:1px solid rgba(255,255,255,.08);
   }
-  .screenActions .btn{ width:100%; min-width:0; }
 
-  .booth{
+  .screenActions .btn{
     width:100%;
-    height:calc(100vh - 64px - (86px + env(safe-area-inset-bottom)) - 20px);
-    border-radius:18px;
+    min-width:0;
   }
 
-  .controlsDesktop{ display:none; }
+  .controlsDesktop{
+    display:none;
+  }
+
   .mobileBar{
     display:block;
     position:fixed;
-    left:0; right:0; bottom:0;
+    left:0;
+    right:0;
+    bottom:0;
     padding:10px 10px calc(10px + env(safe-area-inset-bottom));
     background: rgba(10,10,14,.90);
     border-top:1px solid rgba(255,255,255,.10);
     backdrop-filter: blur(12px);
     z-index:60;
   }
+
   .mobileBarInner{
     display:flex;
     align-items:center;
     justify-content:space-between;
     gap:10px;
   }
+
   .mobileTitle{
     font-size:12px;
     font-weight:900;
@@ -675,6 +1014,7 @@ body.captureActive .mobileBar{
     text-overflow:ellipsis;
     max-width:52vw;
   }
+
   .mobileSub{
     margin-top:2px;
     font-size:12px;
@@ -684,10 +1024,12 @@ body.captureActive .mobileBar{
     text-overflow:ellipsis;
     max-width:52vw;
   }
+
   .mobileBarRight{
     display:flex;
     gap:10px;
   }
+
   .mobileBarRight .btn{
     min-width:0;
     padding:12px 14px;
@@ -698,6 +1040,7 @@ body.captureActive .mobileBar{
     overflow:hidden;
     align-items:center;
   }
+
   .modalCard{
     width:96vw;
     height:calc(100vh - 20px - env(safe-area-inset-bottom));
@@ -708,16 +1051,19 @@ body.captureActive .mobileBar{
     overflow:hidden;
     border-radius:18px;
   }
+
   .preview{
     border-right:none;
     border-bottom:1px solid rgba(255,255,255,.08);
     padding:10px;
   }
+
   .preview img,
   .preview video{
     max-height:26vh;
     max-width:92vw;
   }
+
   .panel{
     padding:12px;
     overflow:hidden;
@@ -725,40 +1071,96 @@ body.captureActive .mobileBar{
     flex-direction:column;
     gap:10px;
   }
-  .panel .btn{ width:100%; min-width:0; }
-  .divider{ margin:10px 0; }
+
+  .panel .btn{
+    width:100%;
+    min-width:0;
+  }
+
+  .divider{
+    margin:10px 0;
+  }
 
   .kioskStartScreen{
     padding:10px;
   }
+
   .kioskStartScreen::before{
     top:16px;
     left:16px;
     font-size:12px;
   }
+
   .kioskFrameGlow{
     inset:2px;
     border-radius:24px;
     border-width:5px;
   }
+
   .kioskBrand{
     font-size:14px;
     letter-spacing:1.3px;
   }
+
   .kioskStartBtn{
     min-width:100%;
     min-height:96px;
     font-size:clamp(24px, 7vw, 34px);
     padding:20px 18px;
   }
+
   .kioskHint{
     font-size:12px;
   }
+
+  body:has(#screenTemplate.show) .stage,
+  body:has(#screenInstructions.show) .stage,
+  body:has(#screenCapture.show) .stage{
+    padding:0;
+  }
+
+  #screenTemplate .screenCard,
+  #screenInstructions .screenCard{
+    height:100vh;
+    max-height:100vh;
+    border-radius:0;
+    padding:28px 18px 18px;
+  }
+
+  #screenTemplate .screenCard::before,
+  #screenInstructions .screenCard::before{
+    inset:2px;
+    border-radius:24px;
+    border-width:5px;
+  }
+
+  #screenTemplate .screenTitle,
+  #screenInstructions .screenTitle{
+    font-size:24px;
+  }
+
+  .boothShell{
+    padding:2px;
+  }
+
+  .boothShell::before{
+    inset:2px;
+    border-radius:24px;
+    border-width:5px;
+  }
+
+  .booth{
+    width:100vw;
+    height:calc(100vh - (86px + env(safe-area-inset-bottom)));
+    border-radius:20px;
+  }
 }
 
-/* mobile override: hide bottom bar unless on Capture screen */
-@media (max-width: 980px){
-  .mobileBar{ display:none !important; }
+/* ===== MOBILE OVERRIDE ===== */
+@media (max-width:980px){
+  .mobileBar{
+    display:none !important;
+  }
 
   body.captureActive .mobileBar{
     display:block !important;
@@ -773,11 +1175,12 @@ body.captureActive .mobileBar{
   }
 }
 
-/* mobile: reclaim space when bar is hidden + keep Continue visible */
-@media (max-width: 980px){
+/* ===== MOBILE SPACE FIXES ===== */
+@media (max-width:980px){
   .stage{
     padding-bottom:10px !important;
   }
+
   body.captureActive .stage{
     padding-bottom:calc(86px + env(safe-area-inset-bottom)) !important;
   }
