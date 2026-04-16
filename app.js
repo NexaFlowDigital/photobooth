@@ -540,7 +540,7 @@
       if (!stripDataUrl) return;
       mime = "image/png";
       blob = await dataUrlToBlob(stripDataUrl);
-      filename = `GOS_PhotoStrip_${new Date().toISOString().replace(/[:.]/g, "-")}.png`;
+      filename = `NexaFlowDigital_PhotoStrip_${new Date().toISOString().replace(/[:.]/g, "-")}.png`;
     }
 
     // Mobile share sheet if possible
@@ -610,7 +610,7 @@
         payloadObj = {
           email,
           type: "photo",
-          filename: `GOS_PhotoStrip_${new Date().toISOString().replace(/[:.]/g, "-")}.png`,
+          filename: `NexaFlowDigital_PhotoStrip_${new Date().toISOString().replace(/[:.]/g, "-")}.png`,
           mimeType: "image/png",
           pngDataUrl: stripDataUrl,
         };
