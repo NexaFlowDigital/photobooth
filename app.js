@@ -533,7 +533,7 @@
       mime = animMime || blob.type || "video/webm";
       const ext = mimeToExtension(mime);
 
-      filename = `GOS_${selectedMode === MODES.BOOM ? "Boomerang" : "GIF"}_${new Date()
+      filename = `NFD_${selectedMode === MODES.BOOM ? "Boomerang" : "GIF"}_${new Date()
         .toISOString()
         .replace(/[:.]/g, "-")}.${ext}`;
     } else {
@@ -624,7 +624,7 @@
         payloadObj = {
           email,
           type: selectedMode === MODES.BOOM ? "boomerang" : "gif",
-          filename: `GOS_${selectedMode === MODES.BOOM ? "Boomerang" : "GIF"}_${new Date()
+          filename: `NFD_${selectedMode === MODES.BOOM ? "Boomerang" : "GIF"}_${new Date()
             .toISOString()
             .replace(/[:.]/g, "-")}.${ext}`,
           mimeType: mime,
